@@ -1,0 +1,19 @@
+#服务端口
+server:
+  port: 7780
+#日志类级别
+logging:
+  level:
+    com.alice1530: info
+    org.springframework: error
+  file: ./Music/qfdj.log
+
+qfdj:
+#  文件下载路径，留空不填默认与jar同级目录下
+#  static_file_path: D:\Desktop\Desktop\stat
+  static_file_path:
+#    定时任务cron表达式，每日13点16点运行，尽量修改，不要默认扎堆，官网报废就没得玩了
+  task_cron: "0 0 13,16 * * ?"
+#  删除近N天前的文件，留空不填默认删除近7天前文件
+#  deleteNdays: 7
+  deleteNdays:
