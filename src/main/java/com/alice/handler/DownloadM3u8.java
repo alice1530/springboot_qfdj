@@ -195,7 +195,7 @@ public class DownloadM3u8 {
                         return;
                     }
                 }
-                String cmd = ffmpegPath + "ffmpeg -f concat -safe 0 -i " + filetxt + " -acodec copy " + outfile;
+                String cmd = ffmpegPath + " -f concat -safe 0 -i " + filetxt + " -acodec copy " + outfile;
                 log.debug("cmd = " + cmd);
                 ProcessBuilder pb = new ProcessBuilder().command("sh", "-c", cmd).inheritIO();
                 //pb.redirectErrorStream(true);//这里是把控制台中的红字变成了黑字，用通常的方法其实获取不到，控制台的结果是pb.start()方法内部输出            的。
