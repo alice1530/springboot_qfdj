@@ -10,11 +10,10 @@ import java.io.File;
 
 
 @Configuration
-public class MyWebConfigurer implements WebMvcConfigurer {
+public class MyWebConfigurer extends CommonBean implements WebMvcConfigurer {
 
 
-    @Value("${qfdj.static_file_path}")
-    String static_file_path;
+
     @Override
     public void addResourceHandlers(ResourceHandlerRegistry registry) {
         if (static_file_path==null||"".equals(static_file_path.trim()))

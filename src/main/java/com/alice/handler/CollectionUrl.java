@@ -1,16 +1,17 @@
 package com.alice.handler;
 
+import com.alice.config.CommonBean;
 import com.eclipsesource.v8.V8;
 import org.jsoup.Connection;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
 import org.jsoup.select.Elements;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
 
-import java.io.*;
+import java.io.BufferedInputStream;
+import java.io.IOException;
+import java.io.InputStream;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.List;
@@ -18,11 +19,11 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 @Component
-public class CollectionUrl {
+public class CollectionUrl extends CommonBean {
 
 
     private String date = new SimpleDateFormat("yyyy/MM/dd").format(System.currentTimeMillis());
-    public static final Logger log = LoggerFactory.getLogger(CollectionUrl.class);
+
 
     /**
      * 搜集连接 [url##name,url##name]

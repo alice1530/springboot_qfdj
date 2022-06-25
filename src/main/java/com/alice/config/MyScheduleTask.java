@@ -5,7 +5,9 @@ import com.alice.handler.DownloadM3u8;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.EnvironmentAware;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.core.env.Environment;
 import org.springframework.scheduling.annotation.EnableScheduling;
 import org.springframework.scheduling.annotation.Scheduled;
 
@@ -13,15 +15,9 @@ import javax.annotation.PostConstruct;
 
 @Configuration
 @EnableScheduling
-public class MyScheduleTask {
+public class MyScheduleTask extends CommonBean {
 
-    @Autowired
-    private DownloadM3u8 downloadM3u8;
 
-    @Autowired
-    private CreateHtml createHtml;
-
-    public static final Logger log = LoggerFactory.getLogger(MyScheduleTask.class);
 
 
 
@@ -42,7 +38,6 @@ public class MyScheduleTask {
     //@PostConstruct启动时执行一次
     @PostConstruct
     private void startRunOnce(){
-
         new Thread(()->{
             run();
         }).start();

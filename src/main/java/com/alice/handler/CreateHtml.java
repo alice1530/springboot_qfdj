@@ -1,8 +1,6 @@
 package com.alice.handler;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Value;
+import com.alice.config.CommonBean;
 import org.springframework.stereotype.Component;
 import org.springframework.util.FileCopyUtils;
 
@@ -13,13 +11,10 @@ import java.util.Collections;
 import java.util.Comparator;
 
 @Component
-public class CreateHtml {
+public class CreateHtml extends CommonBean {
 
-    @Value("${qfdj.static_file_path}")
-    private String static_file_path;
     private static final String PATH_SEPARATOR = File.separator;
     private static final String RUNTIME_DIR = System.getProperty("user.dir");
-    private static final Logger log= LoggerFactory.getLogger(CreateHtml.class);
     /**
      * 生成首页html
      */
@@ -28,6 +23,11 @@ public class CreateHtml {
         String userDir = static_file_path;
         if(userDir==null||"".equals(userDir.trim()))
             userDir=RUNTIME_DIR;
+
+        String aday  = deleteNdays;
+        if(aday==null||"".equals(aday.trim()))
+            aday="7";
+
 
         String dir = userDir+PATH_SEPARATOR+"Music"+PATH_SEPARATOR;
         log.info("生成Html页面到：{}",dir);
@@ -135,7 +135,7 @@ public class CreateHtml {
                     }
             );
 
-            frame.append("<div>每日13点10分更新，仅保留近7天的内容<div>");
+            frame.append("<div>每日13点10分更新，仅保留近"+aday+"天的内容<div>");
             frame.append(" <script type=\"text/javascript\">");
             frame.append("let swich=0; ");
             frame.append("window.onload=function(){ ");
