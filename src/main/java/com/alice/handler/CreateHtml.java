@@ -51,6 +51,16 @@ public class CreateHtml {
             }
 
         }
+        if(!new File(dir+"favicon.ico").exists()){
+            try {
+                InputStream i= this.getClass().getResource("favicon.ico").openStream();
+                FileOutputStream o = new FileOutputStream(dir+"favicon.ico");
+                FileCopyUtils.copy(i, o);
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+
+        }
 
 
 

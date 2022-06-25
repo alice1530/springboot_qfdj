@@ -6,7 +6,7 @@ logging:
   level:
     com.alice1530: info
     org.springframework: error
-  file: ./qldj.log
+  file: ./qfdj.log
 
 qfdj:
 #  文件下载路径，留空不填默认与jar同级目录下

@@ -10,9 +10,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
 
-import java.io.BufferedReader;
-import java.io.FileReader;
-import java.io.IOException;
+import java.io.*;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.List;
@@ -86,15 +84,18 @@ public class CollectionUrl {
 
                 //j2v8调用js解码
                 V8 runtime = V8.createV8Runtime();
-                String decodeJsPath=CollectionUrl.class.getResource("qfUrlDecode.js").getPath();
-                BufferedReader br = new BufferedReader(new FileReader(decodeJsPath));
-                String line = br.readLine();
+//                String decodeJsPath=CollectionUrl.class.getResource("qfUrlDecode.js").getPath();
+                InputStream inputStream= this.getClass().getResource("qfUrlDecode.js").openStream();
+                BufferedInputStream br = new BufferedInputStream(inputStream);
+
+                byte[] by = new byte[1024];
+                int len=0;
                 StringBuilder sb = new StringBuilder();
-                while (line != null) {
-                    sb.append(line);
-                    line = br.readLine();
+                while ((len=br.read(by))!=-1) {
+                    sb.append(new String(by,0,len,"utf-8"));
                 }
                 String everything = sb.toString();
+
                 runtime.executeScript(everything);
                 String playurl = (String) runtime.executeJSFunction("getDownloadUrl", a, b);
                 runtime.release();

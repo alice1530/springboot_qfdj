@@ -42,6 +42,7 @@ public class DownloadM3u8 {
             if (userDir == null || "".equals(userDir.trim()))
                 userDir = RUNTIME_DIR;
 
+
             log.info("当前文件存放路径：{}",userDir);
             List<String> musicList = new ArrayList<>();
             String dayPath = userDir + PATH_SEPARATOR + "Music" + PATH_SEPARATOR + DATE;
@@ -72,12 +73,12 @@ public class DownloadM3u8 {
                 }
                 //生成当日文件夹
                 new File(dayPath).mkdirs();
-                OutputStreamWriter writer = new OutputStreamWriter(new FileOutputStream("dayPathList"),"utf-8");
+                OutputStreamWriter writer = new OutputStreamWriter(new FileOutputStream(dayPathList),"utf-8");
                 writer.write(sbb.toString());
                 writer.flush();
                 writer.close();
             }
-
+//            if(true)return;
             CountDownLatch countDownLatch =new CountDownLatch(musicList.size());
             if (musicList != null && musicList.size() > 0) {
                 int musicSize = musicList.size();
