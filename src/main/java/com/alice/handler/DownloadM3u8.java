@@ -11,7 +11,9 @@ import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.List;
-import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.atomic.AtomicInteger;
 
 @Component
 public class DownloadM3u8 extends CommonBean {
@@ -19,6 +21,7 @@ public class DownloadM3u8 extends CommonBean {
 
     private static final String PATH_SEPARATOR = File.separator;
     private static final String DATE = new SimpleDateFormat("yyyy-MM-dd").format(System.currentTimeMillis());
+//    private static final String DATE = new SimpleDateFormat("yyyy-MM-dd").format(System.currentTimeMillis()+1000*60*60*24);
     private static final String RUNTIME_DIR = System.getProperty("user.dir");
 
     public void handle() {
@@ -34,7 +37,7 @@ public class DownloadM3u8 extends CommonBean {
             String dayPathList = userDir + PATH_SEPARATOR + "Music" + PATH_SEPARATOR + DATE + PATH_SEPARATOR + DATE + ".list";
             File daylist = new File(dayPathList);
             if (daylist.exists() && daylist.length() > 0) {
-                log.info("已存在当日文件：{}", dayPathList);
+                log.info("已存在当日列表文件：{}", dayPathList);
                 //从本地获取列表文件
                 try {
                     BufferedReader br = new BufferedReader(new FileReader(dayPathList));
@@ -64,27 +67,33 @@ public class DownloadM3u8 extends CommonBean {
                 writer.close();
             }
 //            if(true)return;
-            CountDownLatch countDownLatch =new CountDownLatch(musicList.size());
+
+
+            //使用线程池，10个线程一组
+            ExecutorService pool = Executors.newFixedThreadPool(10);
+            log.info("开启10个线程进行处理....");
+            int musicSize = musicList.size();
+            AtomicInteger count = new AtomicInteger(musicSize);
             if (musicList != null && musicList.size() > 0) {
-                int musicSize = musicList.size();
+                log.info("等待线程下载合并完成后生成html页面.....");
                 for (int i = 0; i < musicSize; i++) {
                     String finalStr = musicList.get(i);
                     //启动线程处理下载文件
                     String finalUserDir = userDir;
-//                    System.out.println("finalUserDir = " + finalUserDir);
-                    new Thread(() -> {
+                    //添加到线程池
+                    pool.submit(() -> {
+                        int current = count.getAndDecrement();
+                        log.info("共{}条链接，剩余{}条待处理",musicSize,current);
                         new DownloadM3u8().dowloadM3u8(finalStr, finalUserDir);
-                        countDownLatch.countDown();
-                    }).start();
+                    });
                 }
             } else {
                 log.error("当前无音乐列表,请往查看当日是否已更新  https://www.vvvdj.com/sort/c1/ ");
             }
 
-            log.info("等待线程下载合并完成后生成html页面.....");
-            countDownLatch.await();
-
-
+            pool.shutdown();
+            while (!pool.isTerminated());
+            log.info("下载合并结束!");
 
         } catch (
                 Exception e) {
@@ -176,7 +185,7 @@ public class DownloadM3u8 extends CommonBean {
                     }
                 }
                 String cmd = ffmpegPath + " -loglevel quiet -f concat -safe 0 -i " + filetxt + " -acodec copy " + outfile;
-                log.info("合成命令: " + cmd);
+                log.debug("合成命令: " + cmd);
                 ProcessBuilder pb = new ProcessBuilder().command("cmd.exe", "/c", cmd).inheritIO();
                 pb.start().waitFor();
             } else {
@@ -191,7 +200,7 @@ public class DownloadM3u8 extends CommonBean {
                     }
                 }
                 String cmd = ffmpegPath + " -loglevel quiet -f concat -safe 0 -i " + filetxt + " -acodec copy " + outfile;
-                log.info("合成命令: " + cmd);
+                log.debug("合成命令: " + cmd);
                 ProcessBuilder pb = new ProcessBuilder().command("sh", "-c", cmd).inheritIO();
                 //pb.redirectErrorStream(true);//这里是把控制台中的红字变成了黑字，用通常的方法其实获取不到，控制台的结果是pb.start()方法内部输出            的。
                 //pb.redirectOutput(tmpFile);//把执行结果输出。
@@ -221,6 +230,7 @@ public class DownloadM3u8 extends CommonBean {
 
         } catch (Exception e) {
             e.printStackTrace();
+            log.error(e.getMessage());
         }
 
     }
@@ -257,7 +267,7 @@ public class DownloadM3u8 extends CommonBean {
             log.debug(url + "  download success!");
         } catch (IOException e) {
             e.printStackTrace();
-            log.debug(url + "  download field!");
+            log.error(url + "  download field!");
         } finally {
             try {
                 os.close();
