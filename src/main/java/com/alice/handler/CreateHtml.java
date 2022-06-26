@@ -15,6 +15,9 @@ public class CreateHtml extends CommonBean {
 
     private static final String PATH_SEPARATOR = File.separator;
     private static final String RUNTIME_DIR = System.getProperty("user.dir");
+    private static final String date = new SimpleDateFormat("yyyy-MM-dd").format(System.currentTimeMillis());
+//    private static final String date = new SimpleDateFormat("yyyy-MM-dd").format(System.currentTimeMillis()+1000*60*60*24);
+
     /**
      * 生成首页html
      */
@@ -63,15 +66,11 @@ public class CreateHtml extends CommonBean {
         }
 
 
-
-//String dir="/root/qfdj/Music/";
-//String date = new SimpleDateFormat("yyyy-MM-dd").format(System.currentTimeMillis()-3600*24*9*1000);
-        String date = new SimpleDateFormat("yyyy-MM-dd").format(System.currentTimeMillis());
-
         try (OutputStreamWriter fw = new OutputStreamWriter(new FileOutputStream(dir+date+"/list"+date+".html"),"utf-8"); OutputStreamWriter wf = new OutputStreamWriter(new FileOutputStream(dir+"index.html"),"utf-8")) {
 
             //生成列表
             StringBuilder sb = new StringBuilder();
+            boolean hasItem=false;
             sb.append("<div style=\"text-align:center;background-color:yellow;margin:10px;padding:5px;\">");
             sb.append("<span>"+date+"</span>");
             sb.append("</div>");
@@ -81,12 +80,15 @@ public class CreateHtml extends CommonBean {
             Arrays.sort(list, Collections.reverseOrder());
             for (int i = 0; i < list.length; i++)
                 if (list[i].endsWith(".aac")){
+                    hasItem=true;
                     sb.append("<li class=\"item\"> ");
                     sb.append("<a id=\""+list[i].split("_")[0]+"\" onclick=\"play()\" href=\"javascript:void(0);\">"+list[i]+ "</a>");
                     sb.append("</li>\n");
                 }
             sb.append("</ol>");
-            fw.write(sb.toString());
+            if(hasItem){
+                fw.write(sb.toString());
+            }
             fw.flush();
             fw.close();
 
@@ -203,6 +205,7 @@ public class CreateHtml extends CommonBean {
             log.info("生成页面结束!");
         } catch (Exception e) {
             e.printStackTrace();
+            log.error("生成Html页面异常:",e.getMessage());
         }
 
     }

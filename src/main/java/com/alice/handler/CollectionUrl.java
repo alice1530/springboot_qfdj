@@ -23,6 +23,7 @@ public class CollectionUrl extends CommonBean {
 
 
     private String date = new SimpleDateFormat("yyyy/MM/dd").format(System.currentTimeMillis());
+//    private String date = new SimpleDateFormat("yyyy/MM/dd").format(System.currentTimeMillis()+1000*60*60*24);
 
 
     /**
