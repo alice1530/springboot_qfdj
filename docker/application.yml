@@ -1,13 +1,17 @@
 #服务端口
 server:
   port: 7780
+#关闭默认ico
+spring:
+  mvc:
+    favicon:
+      enabled: false
 #日志类级别
 logging:
   level:
     com.alice: info
     org.springframework: error
   file: ./Music/springboot_qfdj.log
-
 qfdj:
 #  文件下载路径，留空不填默认与jar同级目录下
 #  static_file_path: D:\Desktop\Desktop\stat
@@ -16,4 +20,4 @@ qfdj:
   task_cron: "0 0 13,16 * * ?"
 #  删除近N天前的文件，留空不填默认删除近7天前文件
 #  deleteNdays: 7
-  deleteNdays:
+  deleteNdays: 7
