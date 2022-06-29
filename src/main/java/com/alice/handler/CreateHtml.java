@@ -98,20 +98,25 @@ public class CreateHtml extends CommonBean {
             StringBuilder frame = new StringBuilder();
             frame.append("<html>");
             frame.append("<head><meta http-equiv=\"Content-Type\" content=\"text/html; charset=utf-8\">");
-            frame.append("<style type=\"text/css\">.item{border: solid 1px;width:480px;max-height:80px;background-color:#ffc0cba1;}</style>");
-            frame.append("<style type=\"text/css\">.current{border: solid 1px;width:600px;font-size:initial;background-color:greenyellow;");
-            frame.append("animation-name:current_ant;animation-duration: 1s;animation-iteration-count: infinite;animation-direction: alternate;}</style>");
-            frame.append("<style type=\"text/css\">@keyframes current_ant{from{transform:scale(0.8,0.8)} to{transform:scale(1,1)}}</style>");
-            frame.append("<style type=\"text/css\">h1{cursor: pointer;} a{text-decoration:none;}</style>");
+            frame.append("<style type=\"text/css\">.item:nth-child(odd){border:solid 1px;width:580px;background-color:#ffc0cb3b;margin:1px;}</style>");
+            frame.append("<style type=\"text/css\">.item:nth-child(even){border:solid 1px;width:580px;background-color:#aacaff3b;}</style>");
+            frame.append("<style type=\"text/css\">.current{border: solid 1px;width:725px;font-size:initial;text-align:center;background-color:greenyellow;");
+            frame.append("animation-name:current_ant;animation-duration: 2s;animation-iteration-count: infinite;animation-direction: alternate;}</style>");
+            frame.append("<style type=\"text/css\">@keyframes current_ant{from{transform:scale(1,1)} to{transform:scale(0.8,0.8)}}</style>");
+            frame.append("<style type=\"text/css\">h1{cursor: pointer;} a{text-decoration:none;font-size:larger;}</style>");
             frame.append("<style type=\"text/css\">ol{display: flex;flex-direction: column; align-items: center;}</style>");
             frame.append("<link rel=\"stylesheet\" href=\"video-js.min.css\">");
             frame.append("<script src=\"video.min.js\"></script>");
             frame.append("<title>在线试听</title>");
             frame.append("</head><body style='font-size:smaller;background-color:aliceblue;'>");
             frame.append("<h1 onclick='dspl()' id=\"showName\" style = \"color:red;text-align: center;\">点击列表↓↓↓↓播放音乐</h1>");
-            frame.append("<div id='showView' style='display:none;justify-content: center;'>");
-            frame.append("<video id=\"my-player\"  class=\"video-js vjs-big-play-centered\"></video>");
+            //头部隐藏块
+            frame.append("<div id='showView' style='display: none; flex-direction: column; align-items: center; justify-content: flex-start;'>");
+            frame.append("<video id='my-player'  class='video-js vjs-big-play-centered'></video>");
+            frame.append("<div><input id='range' type='range' value='1' min='0.1' max='2' step='0.1' onchange='changeV()'>");
+            frame.append("<br>倍速:<label id='label' for='range'>1</label></div>");
             frame.append("</div>");
+            //控制
             frame.append("<h1 id='control'  style='display:none;color:red;text-align: center;'>");
             frame.append("<a title='ctrl+←' href='javascript:void(0);' onclick='prevNext(-1)'>←上一首</a>&nbsp;&nbsp;|&nbsp;&nbsp;");
             frame.append("<a title='space' href='javascript:void(0);' onclick='continuePlay()'></a>&nbsp;&nbsp;|&nbsp;&nbsp;");
@@ -139,17 +144,40 @@ public class CreateHtml extends CommonBean {
 
             frame.append("<div>每日13点10分更新，仅保留近"+aday+"天的内容<div>");
             frame.append(" <script type=\"text/javascript\">");
-            frame.append("let swich=0; ");
+            //初始参数
+            frame.append("let swich=true; ");
+            frame.append("let rate = 1;");
+            frame.append("let btn = document.getElementById('control').children[1];");
+            //页面加载完成
             frame.append("window.onload=function(){ ");
             frame.append("player = videojs('my-player', {autoplay:true,controls:true,preload:\"auto\"},function(){");
-            frame.append("this.on('loadeddata',()=>{");
-            frame.append("showStatus();");
-            frame.append("});");
             frame.append("this.on('ended',()=>{");
             frame.append("prevNext(1);");
             frame.append("});");
+            frame.append("this.on('waiting',()=>{");
+            frame.append("document.querySelector('.current').style.animationPlayState = 'paused';");
+            frame.append("btn.innerText ='加载中...';");
+            frame.append("});");
+            frame.append("this.on('play',()=>{");
+            frame.append("player.playbackRate(rate);");
+            frame.append("});");
+            frame.append("this.on('playing',()=>{");
+            frame.append("document.querySelector('.current').style.animationPlayState = 'running';");
+            frame.append("btn.innerText ='播放中';");
+            frame.append("});");
+            frame.append("this.on('pause',()=>{");
+            frame.append("document.querySelector('.current').style.animationPlayState = 'paused';");
+            frame.append("btn.innerText ='已暂停';");
+            frame.append("});");
             frame.append("});");
             frame.append("};");
+            //倍速
+            frame.append("function changeV(){");
+            frame.append("rate = document.getElementById('range').value;");
+            frame.append("document.getElementById('label').innerText=rate;");
+            frame.append("player.playbackRate(rate);");
+            frame.append("};");
+            //播放
             frame.append("function play() {");
             frame.append("var aa=event.target;");
             frame.append("var id = aa.id;");
@@ -163,13 +191,14 @@ public class CreateHtml extends CommonBean {
             frame.append("document.getElementById('showName').scrollIntoView({ behavior: 'smooth'});");
             frame.append("document.getElementById('control').style.setProperty('display','block');");
             frame.append("};");
+            //显示播放窗口
             frame.append("function dspl() {");
-            frame.append("swich++;");
-            frame.append("if(swich%2==0) ");
+            frame.append("if (swich=!swich)");
             frame.append("document.getElementById('showView').style.setProperty('display','none');");
             frame.append("else ");
             frame.append("document.getElementById('showView').style.setProperty('display','flex');");
             frame.append("};");
+            //下一首，上一首
             frame.append("function prevNext(num) {");
             frame.append("var list = document.querySelectorAll('a[id]');");
             frame.append("var nextIndex=0;");
@@ -180,16 +209,11 @@ public class CreateHtml extends CommonBean {
             frame.append("nextIndex=nextIndex>list.length-1?0:nextIndex;");
             frame.append("list[nextIndex].click();");
             frame.append("};");
+            //暂停，播放
             frame.append("function continuePlay() {");
             frame.append("if(player.paused())player.play();else player.pause();");
-            frame.append("showStatus();");
             frame.append("};");
-            frame.append("function showStatus() {");
-            frame.append("var btn = document.getElementById('control').children[1];");
-            frame.append("var animation = document.querySelector('.current');");
-            frame.append("if(player.paused()){btn.innerText='播放';animation.style.animationPlayState='paused';} ");
-            frame.append("else {btn.innerText='暂停';animation.style.animationPlayState='running';}");
-            frame.append("};");
+            //键盘事件
             frame.append("document.addEventListener('keydown',e=>{");
             frame.append("if(e.ctrlKey&&e.keyCode===37)prevNext(-1);");
             frame.append("else if(e.ctrlKey&&e.keyCode===39)prevNext(1);");
