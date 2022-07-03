@@ -2,7 +2,7 @@ FROM centos:latest
 
 WORKDIR /qfdj
 
-COPY  qfdj-v1.0.jar /qfdj
+COPY  qfdj-v2.0.jar /qfdj
 COPY  application.yml /qfdj
 
 ADD ffmpeg.tar.gz /qfdj
@@ -16,5 +16,5 @@ RUN /bin/cp /usr/share/zoneinfo/Asia/Shanghai /etc/localtime && echo 'Asia/Shang
 
 EXPOSE 7780
 
-ENTRYPOINT ["java","-jar","qfdj-v1.0.jar"]
+ENTRYPOINT ["java","-jar","qfdj-v2.0.jar"]
 
