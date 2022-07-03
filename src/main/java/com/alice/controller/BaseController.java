@@ -27,8 +27,8 @@ public class BaseController {
     @ResponseBody
     public String search(@PathVariable("id") String id){
 
-
         try {
+            id = id.trim();
             Integer.parseInt(id);
             if (id.length()<5||id.length()>6)return null;
         } catch (Exception e) {
