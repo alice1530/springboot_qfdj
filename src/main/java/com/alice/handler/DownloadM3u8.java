@@ -7,10 +7,7 @@ import java.io.*;
 import java.net.URL;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
-import java.util.ArrayList;
-import java.util.Calendar;
-import java.util.Date;
-import java.util.List;
+import java.util.*;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -21,7 +18,7 @@ public class DownloadM3u8 extends CommonBean {
 
     private static final String PATH_SEPARATOR = File.separator;
     private static final String DATE = new SimpleDateFormat("yyyy-MM-dd").format(System.currentTimeMillis());
-//    private static final String DATE = new SimpleDateFormat("yyyy-MM-dd").format(System.currentTimeMillis()+1000*60*60*24);
+    //    private static final String DATE = new SimpleDateFormat("yyyy-MM-dd").format(System.currentTimeMillis()+1000*60*60*24);
     private static final String RUNTIME_DIR = System.getProperty("user.dir");
 
     public void handle() {
@@ -31,7 +28,7 @@ public class DownloadM3u8 extends CommonBean {
                 userDir = RUNTIME_DIR;
 
 
-            log.info("当前文件存放路径：{}",userDir);
+            log.info("当前文件存放路径：{}", userDir);
             List<String> musicList = new ArrayList<>();
             String dayPath = userDir + PATH_SEPARATOR + "Music" + PATH_SEPARATOR + DATE;
             String dayPathList = userDir + PATH_SEPARATOR + "Music" + PATH_SEPARATOR + DATE + PATH_SEPARATOR + DATE + ".list";
@@ -61,7 +58,7 @@ public class DownloadM3u8 extends CommonBean {
                 }
                 //生成当日文件夹
                 new File(dayPath).mkdirs();
-                OutputStreamWriter writer = new OutputStreamWriter(new FileOutputStream(dayPathList),"utf-8");
+                OutputStreamWriter writer = new OutputStreamWriter(new FileOutputStream(dayPathList), "utf-8");
                 writer.write(sbb.toString());
                 writer.flush();
                 writer.close();
@@ -79,20 +76,18 @@ public class DownloadM3u8 extends CommonBean {
                 for (int i = 0; i < musicSize; i++) {
                     String finalStr = musicList.get(i);
                     //启动线程处理下载文件
-                    String finalUserDir = userDir;
                     //添加到线程池
                     pool.submit(() -> {
                         int current = count.getAndDecrement();
-                        log.info("共{}条链接，剩余{}条待处理",musicSize,current);
-                        new DownloadM3u8().dowloadM3u8(finalStr, finalUserDir);
+                        log.info("共{}条链接，剩余{}条待处理", musicSize, current);
+                        new DownloadM3u8().downloadM3u8(finalStr);
                     });
                 }
             } else {
                 log.error("当前无音乐列表,请往查看当日是否已更新  https://www.vvvdj.com/sort/c1/ ");
             }
-
             pool.shutdown();
-            while (!pool.isTerminated());
+            while (!pool.isTerminated()) ;
             log.info("下载合并结束!");
 
         } catch (
@@ -101,24 +96,37 @@ public class DownloadM3u8 extends CommonBean {
         }
     }
 
-    private void dowloadM3u8(String finalUrl, String baseDir) {
+    public String downloadM3u8(String finalUrl) {
+        return downloadM3u8(null, finalUrl);
+
+    }
+
+    public String downloadM3u8(String currentDir, String finalUrl) {
         try {
             //url = "https://tspc.vvvdj.com/c1/2021/12/224514-b9caed/224514.m3u8?upt=a88e0ee91643471999&news";
-            if (finalUrl == null) return;
+            if (finalUrl == null) return null;
+            String userDir = static_file_path;
+            if (userDir == null || "".equals(userDir.trim()))
+                userDir = RUNTIME_DIR;
+            String baseDir = userDir;
+            if (currentDir == null) {
+                currentDir = DATE;
+            }
             String url = finalUrl.split("##")[0];
             String musicName = finalUrl.split("##")[1];
             log.debug("当前进程的工作空间:" + baseDir);
             String baseUrl = url.substring(0, url.lastIndexOf("/") + 1);
             String fileName = url.substring(url.lastIndexOf("/") + 1, url.lastIndexOf("?"));
             String id = fileName.substring(0, fileName.lastIndexOf("."));
-            String sourceDir = baseDir + PATH_SEPARATOR + "Music" + PATH_SEPARATOR + DATE;
+            String sourceDir = baseDir + PATH_SEPARATOR + "Music" + PATH_SEPARATOR + currentDir;
             String downloadDir = sourceDir + PATH_SEPARATOR + id;
             String downloadFile = downloadDir + PATH_SEPARATOR + fileName;
-            String outfileDir = baseDir + PATH_SEPARATOR + "Music" + PATH_SEPARATOR + DATE;
+            String outfileDir = baseDir + PATH_SEPARATOR + "Music" + PATH_SEPARATOR + currentDir;
             String outfile = outfileDir + PATH_SEPARATOR + id + "_" + musicName + ".aac";
+            String downloadUrl = PATH_SEPARATOR + currentDir + PATH_SEPARATOR + id + "_" + musicName + ".aac";
             if (new File(outfile).exists()) {
                 log.debug(outfile + "   exists!");
-                return;
+                return downloadUrl;
             }
 
 
@@ -155,7 +163,7 @@ public class DownloadM3u8 extends CommonBean {
             String filetxt = downloadDir + PATH_SEPARATOR + id + ".txt";
             File ftxt = new File(filetxt);
             if (!ftxt.exists() || ftxt.length() <= 0) {
-                BufferedWriter bw = new BufferedWriter( new OutputStreamWriter(new FileOutputStream(ftxt),"utf-8"));
+                BufferedWriter bw = new BufferedWriter(new OutputStreamWriter(new FileOutputStream(ftxt), "utf-8"));
                 int size = filetxtList.size();
                 for (int i = 0; i < size; i++) {
                     bw.write("file '" + filetxtList.get(i) + "'");
@@ -164,10 +172,6 @@ public class DownloadM3u8 extends CommonBean {
                 bw.close();
                 log.debug(filetxt + " 保存成功！");
             }
-
-
-
-
 
 
             //ts合成
@@ -181,7 +185,7 @@ public class DownloadM3u8 extends CommonBean {
                         log.error("Not Fund ffmpeg.exe file ");
                         log.error("找不到ffmpeg.exe文件，使用简单stream流合成，效果不如ffmpeg合成");
                         simpleMrege(outfile, filetxtList);
-                        return;
+                        return downloadUrl;
                     }
                 }
                 String cmd = ffmpegPath + " -loglevel quiet -f concat -safe 0 -i " + filetxt + " -acodec copy " + outfile;
@@ -196,7 +200,7 @@ public class DownloadM3u8 extends CommonBean {
                         log.error("Not Fund ffmpeg file ");
                         log.error("找不到ffmpeg文件，使用简单stream流合成，效果不如ffmpeg合成");
                         simpleMrege(outfile, filetxtList);
-                        return;
+                        return downloadUrl;
                     }
                 }
                 String cmd = ffmpegPath + " -loglevel quiet -f concat -safe 0 -i " + filetxt + " -acodec copy " + outfile;
@@ -209,6 +213,7 @@ public class DownloadM3u8 extends CommonBean {
             log.debug("执行合成完成");
             if (new File(outfile).exists()) {
                 log.debug(outfile + " 保存成功！");
+                return downloadUrl;
 
 			/*
 			File oldfile=new File(outfile);
@@ -226,12 +231,14 @@ public class DownloadM3u8 extends CommonBean {
             } else {
 
                 log.error(outfile + " 保存失败，请检查！");
+                return null;
             }
 
         } catch (Exception e) {
             e.printStackTrace();
             log.error(e.getMessage());
         }
+        return null;
 
     }
 
@@ -243,7 +250,7 @@ public class DownloadM3u8 extends CommonBean {
             FileInputStream in = new FileInputStream(filetxtList.get(i));
             int lens = 0;
             byte[] b = new byte[1024];
-            while ((lens=in.read(b))!=-1) {
+            while ((lens = in.read(b)) != -1) {
                 out.write(b, 0, lens);
             }
             in.close();
@@ -292,10 +299,10 @@ public class DownloadM3u8 extends CommonBean {
         if (deleteNdays == null || "".equals(deleteNdays.trim())) {
             deleteNdays = "7";
         }
-        log.info("尝试删除 {} 天前的文件 !",deleteNdays);
+        log.info("尝试删除 {} 天前的文件 !", deleteNdays);
 
         Calendar instance = Calendar.getInstance();
-        instance.add(Calendar.DATE,-Integer.parseInt(deleteNdays));
+        instance.add(Calendar.DATE, -Integer.parseInt(deleteNdays));
         Date time = instance.getTime();
         SimpleDateFormat format = new SimpleDateFormat("yyyy-MM-dd");
 
@@ -320,23 +327,45 @@ public class DownloadM3u8 extends CommonBean {
 
             }
         }
-
+        //删除搜索目录
+        String searchdownload =staticFilePath+PATH_SEPARATOR+"searchdownload";
+        delFiles(searchdownload);
         log.info("删除结束！");
     }
 
     private void delFiles(String path) {
         File ff = new File(path);
+        if (!ff.exists()) return;
         File[] files = ff.listFiles();
         for (int i = 0; i < files.length; i++) {
-            if (files[i].exists()&&files[i].isFile())
+            if (files[i].exists() && files[i].isFile())
                 files[i].delete();
             else delFiles(files[i].getAbsolutePath());
         }
-        log.info("删除文件夹：{}",path);
+        log.info("删除文件夹：{}", path);
         ff.delete();
     }
 
-    public static void main(String[] args) {
-        new DownloadM3u8().deleteNdays();
+
+    public String findFileById(String id) {
+        String userDir = static_file_path;
+        if (userDir == null || "".equals(userDir.trim()))
+            userDir = RUNTIME_DIR;
+        File ff = new File(userDir + PATH_SEPARATOR + "Music");
+        if (!ff.exists()) return null;
+        File[] files = ff.listFiles();
+        for (int i = 0; i < files.length; i++) {
+            if (files[i].exists() && files[i].isDirectory() && files[i].getName().startsWith("20")) {
+                File f = files[i].getAbsoluteFile();
+                String[] list = f.list();
+                for (int j = 0; j < list.length; j++) {
+                    if (list[j].startsWith(id) && list[j].endsWith("aac"))
+                        return PATH_SEPARATOR + f.getName() + PATH_SEPARATOR + list[j];
+                }
+            }
+
+        }
+        return null;
     }
+
 }

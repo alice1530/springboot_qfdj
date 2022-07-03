@@ -71,7 +71,8 @@ public class CreateHtml extends CommonBean {
             //生成列表
             StringBuilder sb = new StringBuilder();
             boolean hasItem=false;
-            sb.append("<div style=\"text-align:center;background-color:yellow;margin:10px;padding:5px;\">");
+            sb.append("<div class='sdate'>");
+            //sb.append("<div style=\"text-align:center;background-color:yellow;margin:10px;padding:5px;\">");
             sb.append("<span>"+date+"</span>");
             sb.append("</div>");
             sb.append("<ol>");
@@ -98,23 +99,29 @@ public class CreateHtml extends CommonBean {
             StringBuilder frame = new StringBuilder();
             frame.append("<html>");
             frame.append("<head><meta http-equiv=\"Content-Type\" content=\"text/html; charset=utf-8\">");
-            frame.append("<style type=\"text/css\">.item:nth-child(odd){border:solid 1px;width:580px;background-color:#ffc0cb3b;margin:1px;}</style>");
-            frame.append("<style type=\"text/css\">.item:nth-child(even){border:solid 1px;width:580px;background-color:#aacaff3b;}</style>");
+            frame.append("<style type=\"text/css\">li{border:solid 1px #d6fdff;margin:2px;width:580px}</style>");
+            frame.append("<style type=\"text/css\">.item:nth-child(odd){background-color:#ffc0cb3b;}</style>");
+            frame.append("<style type=\"text/css\">.item:nth-child(even){background-color:#aacaff3b;}</style>");
             frame.append("<style type=\"text/css\">.current{border: solid 1px;width:725px;font-size:initial;text-align:center;background-color:greenyellow;");
             frame.append("animation-name:current_ant;animation-duration: 2s;animation-iteration-count: infinite;animation-direction: alternate;}</style>");
             frame.append("<style type=\"text/css\">@keyframes current_ant{from{transform:scale(1,1)} to{transform:scale(0.8,0.8)}}</style>");
             frame.append("<style type=\"text/css\">h1{cursor: pointer;} a{text-decoration:none;font-size:larger;}</style>");
-            frame.append("<style type=\"text/css\">ol{display: flex;flex-direction: column; align-items: center;}</style>");
+            frame.append("<style type=\"text/css\">ol{display: flex;flex-direction: column; align-items: center;margin-bottom: 40px;padding: 10px;width: 80%;box-shadow: 0.3rem 0.3rem 0.6rem #c8d0e7, -0.2rem -0.2rem 0.5rem #ffffff;}</style>");
+            frame.append("<style type=\"text/css\">.sdate{font-size:x-large;text-align:center;width:90%;height:30px;border-radius:0.3em;");
+            frame.append("box-shadow:0.3rem 0.3rem 0.6rem #c8d0e7, -0.2rem -0.2rem 0.5rem #ffffff;}</style>");
+
             frame.append("<link rel=\"stylesheet\" href=\"video-js.min.css\">");
             frame.append("<script src=\"video.min.js\"></script>");
             frame.append("<title>在线试听</title>");
-            frame.append("</head><body style='font-size:smaller;background-color:aliceblue;'>");
+            frame.append("</head><body style='font-size:smaller;background-color:#e4ebf8;display: flex; flex-direction: column;align-items: center;'>");
             frame.append("<h1 onclick='dspl()' id=\"showName\" style = \"color:red;text-align: center;\">点击列表↓↓↓↓播放音乐</h1>");
             //头部隐藏块
             frame.append("<div id='showView' style='display: none; flex-direction: column; align-items: center; justify-content: flex-start;'>");
             frame.append("<video id='my-player'  class='video-js vjs-big-play-centered'></video>");
-            frame.append("<div><input id='range' type='range' value='1' min='0.1' max='2' step='0.1' onchange='changeV()'>");
+            frame.append("<div><input id='range' type='range' value='1' min='0.1' max='2.5' step='0.1' onchange='changeV()'>");
             frame.append("<br>倍速:<label id='label' for='range'>1</label></div>");
+            frame.append("<div><input id='searchInput' placeholder='请输入音乐编号：'></input><button onclick='search()'>搜索</button></div>");
+            frame.append("<span id='searchA'></span>");
             frame.append("</div>");
             //控制
             frame.append("<h1 id='control'  style='display:none;color:red;text-align: center;'>");
@@ -134,7 +141,6 @@ public class CreateHtml extends CommonBean {
                             }
                             br.close();
                         }catch (Exception e){
-//                            e.printStackTrace();
                             log.error(e.getMessage());
                         }
 
@@ -155,6 +161,7 @@ public class CreateHtml extends CommonBean {
             frame.append("prevNext(1);");
             frame.append("});");
             frame.append("this.on('waiting',()=>{");
+            frame.append("if (document.querySelector('.current') != null)");
             frame.append("document.querySelector('.current').style.animationPlayState = 'paused';");
             frame.append("btn.innerText ='加载中...';");
             frame.append("});");
@@ -162,6 +169,7 @@ public class CreateHtml extends CommonBean {
             frame.append("player.playbackRate(rate);");
             frame.append("});");
             frame.append("this.on('playing',()=>{");
+            frame.append("if (document.querySelector('.current') != null)");
             frame.append("document.querySelector('.current').style.animationPlayState = 'running';");
             frame.append("btn.innerText ='播放中';");
             frame.append("});");
@@ -197,6 +205,34 @@ public class CreateHtml extends CommonBean {
             frame.append("document.getElementById('showView').style.setProperty('display','none');");
             frame.append("else ");
             frame.append("document.getElementById('showView').style.setProperty('display','flex');");
+            frame.append("};");
+            //搜索
+            frame.append("function search() {");
+            frame.append("var inputId = document.getElementById('searchInput').value;");
+            frame.append("if(!inputId)return;");
+            frame.append("document.getElementById('searchA').innerText='处理中...';");
+            frame.append("var xhr = new XMLHttpRequest();");
+            frame.append("xhr.open('get','/qfdj/'+inputId,true);");
+            frame.append("xhr.onload = function () {");
+                frame.append("var data = xhr.responseText;");
+//                frame.append("console.log(data);");
+                frame.append("if(data){");
+                    frame.append("var prefix = data.substring(1,data.lastIndexOf('/'));");
+                    frame.append("var suffix = data.substring(data.lastIndexOf('/')+1);");
+                    frame.append("var bb = document.createElement('a');");
+                    frame.append("player.src([{src: prefix+'/'+inputId+'/'+inputId+'.m3u8',type: 'application/x-mpegURL'}]);");
+                    frame.append("bb.href=data;");
+                    frame.append("bb.target='_blank';");
+                    frame.append("bb.innerText=suffix;");
+                    frame.append("document.getElementById('showName').innerHTML=suffix;");
+                    frame.append("document.getElementById('searchA').innerText='';");
+                    frame.append("document.getElementById('searchA').appendChild(bb);");
+                    frame.append("}else{");
+                    frame.append("document.getElementById('searchA').innerText='非法编号:'+inputId;");
+                frame.append("};");
+                frame.append("document.getElementById('searchInput').value='';");
+                frame.append("};");
+            frame.append("xhr.send(null);");
             frame.append("};");
             //下一首，上一首
             frame.append("function prevNext(num) {");
