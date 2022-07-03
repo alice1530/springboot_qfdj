@@ -41,8 +41,23 @@ public class CollectionUrl extends CommonBean {
                 //延时1秒
                 Thread.sleep(1000);
                 String musicId = musicIds.get(i);
-                String url = "https://www.vvvdj.com/play/" + musicId + ".html";
-                String html = Jsoup.connect(url).get().html();
+                String result = getUrlAndName(musicId);
+                if (result == null) return null;
+                musicUrlAndName.add(result);
+            }
+
+        } catch (Exception e) {
+            e.printStackTrace();
+            log.error("获取连接异常：{}", e.getMessage());
+        }
+
+        log.info("音乐链接：{}",musicUrlAndName);
+        return musicUrlAndName;
+    }
+
+    public String getUrlAndName(String musicId) throws IOException {
+        String url = "https://www.vvvdj.com/play/" + musicId + ".html";
+        String html = Jsoup.connect(url).get().html();
 
 
                 /*new FileWriter("item_body.txt").write(html);
@@ -58,59 +73,51 @@ public class CollectionUrl extends CommonBean {
                 System.out.println(itemBody);*/
 
 
-                //获取加密字符串
-                String a = "";
-                String b = "";
-                String regCode = "playurl=x\\.O000O0OO0O0OO\\('(.*)','(.*)'\\);";//定义正则表达式
-                Pattern patten = Pattern.compile(regCode);//编译正则表达式
-                Matcher matcher = patten.matcher(html);// 指定要匹配的字符串
-                if (matcher.find()) {
-                    a = matcher.group(1);
-                    b = matcher.group(2);
-                } else {
-                    log.error("ID:{},获取加密连接失败", musicId);
-                    return null;
-                }
-
-                //获取歌曲名称
-                String musicName = "";
-                regCode = "<h1>(.*)<\\/h1>";//定义正则表达式
-                patten = Pattern.compile(regCode);//编译正则表达式
-                matcher = patten.matcher(html);// 指定要匹配的字符串
-                if (matcher.find()) {
-                    musicName = matcher.group(1);
-                } else {
-                    log.error("ID:{},获取歌曲名称失败", musicId);
-                    return null;
-                }
-
-                //j2v8调用js解码
-                V8 runtime = V8.createV8Runtime();
-//                String decodeJsPath=CollectionUrl.class.getResource("qfUrlDecode.js").getPath();
-                InputStream inputStream= this.getClass().getResource("qfUrlDecode.js").openStream();
-                BufferedInputStream br = new BufferedInputStream(inputStream);
-
-                byte[] by = new byte[1024];
-                int len=0;
-                StringBuilder sb = new StringBuilder();
-                while ((len=br.read(by))!=-1) {
-                    sb.append(new String(by,0,len,"utf-8"));
-                }
-                String everything = sb.toString();
-
-                runtime.executeScript(everything);
-                String playurl = (String) runtime.executeJSFunction("getDownloadUrl", a, b);
-                runtime.release();
-                musicUrlAndName.add("https:" + playurl + "##" + musicName);
-            }
-
-        } catch (Exception e) {
-            e.printStackTrace();
-            log.error("获取连接异常：{}", e.getMessage());
+        //获取加密字符串
+        String a = "";
+        String b = "";
+        String regCode = "playurl=x\\.O000O0OO0O0OO\\('(.*)','(.*)'\\);";//定义正则表达式
+        Pattern patten = Pattern.compile(regCode);//编译正则表达式
+        Matcher matcher = patten.matcher(html);// 指定要匹配的字符串
+        if (matcher.find()) {
+            a = matcher.group(1);
+            b = matcher.group(2);
+        } else {
+            log.error("ID:{},获取加密连接失败", musicId);
+            return null;
         }
 
-        log.info("音乐链接：{}",musicUrlAndName);
-        return musicUrlAndName;
+        //获取歌曲名称
+        String musicName = "";
+        regCode = "<h1>(.*)<\\/h1>";//定义正则表达式
+        patten = Pattern.compile(regCode);//编译正则表达式
+        matcher = patten.matcher(html);// 指定要匹配的字符串
+        if (matcher.find()) {
+            musicName = matcher.group(1);
+        } else {
+            log.error("ID:{},获取歌曲名称失败", musicId);
+            return null;
+        }
+
+        //j2v8调用js解码
+        V8 runtime = V8.createV8Runtime();
+//                String decodeJsPath=CollectionUrl.class.getResource("qfUrlDecode.js").getPath();
+        InputStream inputStream= this.getClass().getResource("qfUrlDecode.js").openStream();
+        BufferedInputStream br = new BufferedInputStream(inputStream);
+
+        byte[] by = new byte[1024];
+        int len=0;
+        StringBuilder sb = new StringBuilder();
+        while ((len=br.read(by))!=-1) {
+            sb.append(new String(by,0,len,"utf-8"));
+        }
+        String everything = sb.toString();
+
+        runtime.executeScript(everything);
+        String playurl = (String) runtime.executeJSFunction("getDownloadUrl", a, b);
+        runtime.release();
+        String result = "https:" + playurl + "##" + musicName;
+        return result;
     }
 
     /**
@@ -151,13 +158,5 @@ public class CollectionUrl extends CommonBean {
         log.info("音乐id:{}",listIds);
         return listIds;
     }
-
-/*
-    public static void main(String[] args) {
-        List<String> list = new CollectionUrl().collectonUrl();
-        System.out.println("list = " + list);
-
-    }*/
-
 
 }
