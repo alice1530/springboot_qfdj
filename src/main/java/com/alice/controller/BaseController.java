@@ -26,7 +26,6 @@ public class BaseController {
     @RequestMapping("/{id}")
     @ResponseBody
     public String search(@PathVariable("id") String id){
-
         try {
             id = id.trim();
             Integer.parseInt(id);
@@ -48,8 +47,7 @@ public class BaseController {
                     if (downloadUrl != null) {
                         downloadUrl = downloadUrl.replace("\\", "/");
                         log.info("处理完成：{}", downloadUrl);
-                    }
-                    //System.out.println(downloadUrl);
+                    }                    
                 }else {
                     log.info("网络上无结果");
                 }
@@ -60,7 +58,6 @@ public class BaseController {
         } catch (IOException e) {
             e.printStackTrace();
             log.error("解析错误：{}",e.getMessage());
-
         }
         return downloadUrl;
     }
