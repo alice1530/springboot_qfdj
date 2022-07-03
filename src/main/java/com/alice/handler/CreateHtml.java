@@ -208,7 +208,7 @@ public class CreateHtml extends CommonBean {
             frame.append("};");
             //搜索
             frame.append("function search() {");
-            frame.append("var inputId = document.getElementById('searchInput').value;");
+            frame.append("var inputId = document.getElementById('searchInput').value.trim();");
             frame.append("if(!inputId)return;");
             frame.append("document.getElementById('searchA').innerText='处理中...';");
             frame.append("var xhr = new XMLHttpRequest();");
