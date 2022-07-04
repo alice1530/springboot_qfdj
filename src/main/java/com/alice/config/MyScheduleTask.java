@@ -25,11 +25,13 @@ public class MyScheduleTask extends CommonBean {
     @Scheduled(cron = "${qfdj.task_cron}")
     private void run(){
         try {
+	    log.info("定时任务开始......");
             downloadM3u8.handle();
             //删除前几天的文件
             downloadM3u8.deleteNdays();
             //生成Html页面
             createHtml.createHtml();
+	    log.info("定时任务结束!");
         } catch (Exception e) {
             e.printStackTrace();
         }
