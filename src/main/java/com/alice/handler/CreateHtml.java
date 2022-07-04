@@ -83,7 +83,7 @@ public class CreateHtml extends CommonBean {
                 if (list[i].endsWith(".aac")){
                     hasItem=true;
                     sb.append("<li class=\"item\"> ");
-                    sb.append("<a id=\""+list[i].split("_")[0]+"\" onclick=\"play()\" href=\"#\">"+list[i]+ "</a>");
+                    sb.append("<a id=\""+list[i].split("_")[0]+"\" onclick=\"play()\" >"+list[i]+ "</a>");
                     sb.append("</li>\n");
                 }
             sb.append("</ol>");
@@ -100,14 +100,16 @@ public class CreateHtml extends CommonBean {
             frame.append("<html>");
             frame.append("<head><meta http-equiv=\"Content-Type\" content=\"text/html; charset=utf-8\">");
             frame.append("<style type=\"text/css\">li{text-align-last:justify;border:solid 1px #d6fdff;margin:2px;width:580px}</style>");
+            frame.append("<style type=\"text/css\">h1>a:active{background:#b4d7d9;box-shadow:none;}</style>");
+            frame.append("<style type=\"text/css\">h1>a{padding:10px;border-radius:5px;margin-left:20px;margin-right:20px;box-shadow:0.3rem 0.3rem 0.6rem #c8d0e7, -0.2rem -0.2rem 0.5rem #c8d0e7;}</style>");
             frame.append("<style type=\"text/css\">.item:nth-child(odd){background-color:#ffc0cb3b;}</style>");
             frame.append("<style type=\"text/css\">.item:nth-child(even){background-color:#aacaff3b;}</style>");
-            frame.append("<style type=\"text/css\">.current{border: solid 1px;width:725px;font-size:initial;text-align:center;background-color:greenyellow;");
+            frame.append("<style type=\"text/css\">.current{border: solid 1px;font-size: initial;width:725px;text-align:center;background-color:greenyellow;");
             frame.append("animation-name:current_ant;animation-duration: 2s;animation-iteration-count: infinite;animation-direction: alternate;}</style>");
             frame.append("<style type=\"text/css\">@keyframes current_ant{from{transform:scale(1,1)} to{transform:scale(0.8,0.8)}}</style>");
-            frame.append("<style type=\"text/css\">h1{cursor: pointer;} a{text-decoration:none;font-size:larger;} a:visited,a:link{color:blue;}</style>");
-            frame.append("<style type=\"text/css\">ol{display: flex;flex-direction: column; align-items: center;margin-bottom: 40px;padding: 10px;width: 80%;box-shadow: 0.3rem 0.3rem 0.6rem #c8d0e7, -0.2rem -0.2rem 0.5rem #ffffff;}</style>");
-            frame.append("<style type=\"text/css\">.sdate{font-size:x-large;text-align:center;width:90%;height:30px;border-radius:0.3em;");
+            frame.append("<style type=\"text/css\">h1{cursor: pointer;} a{text-decoration:none;font-size:larger;color: blue;cursor: pointer;}</style>");
+            frame.append("<style type=\"text/css\">ol{display: flex;flex-direction: column; align-items: center;padding: 10px;width: 80%;box-shadow: 0.3rem 0.3rem 0.6rem #c8d0e7, -0.2rem -0.2rem 0.5rem #ffffff;}</style>");
+            frame.append("<style type=\"text/css\">.sdate{margin-top: 40px;font-size:x-large;text-align:center;width:90%;height:30px;border-radius:0.3em;");
             frame.append("box-shadow:0.3rem 0.3rem 0.6rem #c8d0e7, -0.2rem -0.2rem 0.5rem #ffffff;}</style>");
 
             frame.append("<link rel=\"stylesheet\" href=\"video-js.min.css\">");
@@ -116,18 +118,18 @@ public class CreateHtml extends CommonBean {
             frame.append("</head><body style='font-size:smaller;background-color:#e4ebf8;display: flex; flex-direction: column;align-items: center;'>");
             frame.append("<h1 onclick='dspl()' id=\"showName\" style = \"color:red;text-align: center;\">点击列表↓↓↓↓播放音乐</h1>");
             //头部隐藏块
-            frame.append("<div id='showView' style='display: none; flex-direction: column; align-items: center; justify-content: flex-start;'>");            
+            frame.append("<div id='showView' style='display: none; flex-direction: column; align-items: center; justify-content: flex-start;'>");
             frame.append("<video id='my-player'  class='video-js vjs-big-play-centered'></video>");
             frame.append("<div><input id='range' type='range' value='1' min='0.1' max='2.5' step='0.1' onchange='changeV()'>");
             frame.append("<br>倍速:<label id='label' for='range'>1</label></div>");
-            frame.append("<div><input type='number' id='searchInput' placeholder='请输入音乐编号：'></input><button onclick='search()'>搜索</button></div>");
+            frame.append("<div><input type='number' id='searchInput' placeholder='请输入音乐编号:'></input><button onclick='search()'>搜索</button></div>");
             frame.append("<span id='searchA'></span>");
             frame.append("</div>");
             //控制
             frame.append("<h1 id='control'  style='display:none;color:red;text-align: center;'>");
-            frame.append("<a title='ctrl+←' href='#' onclick='prevNext(-1)'>←上一首</a>&nbsp;&nbsp;|&nbsp;&nbsp;");
-            frame.append("<a title='space' href='#' onclick='continuePlay()'></a>&nbsp;&nbsp;|&nbsp;&nbsp;");
-            frame.append("<a title='ctrl+→' href='#' onclick='prevNext(1)'>下一首→</a></h1>");
+            frame.append("<a title='ctrl+←'  onclick='prevNext(-1)'>上一首</a>");
+            frame.append("<a title='space'  onclick='continuePlay()'></a>");
+            frame.append("<a title='ctrl+→' onclick='prevNext(1)'>下一首</a></h1>");
             frame.append("<h1 id=\"showDowload\" style = \"color:red;text-align: center;\"></h1>");
 
             //加载列表
@@ -163,7 +165,7 @@ public class CreateHtml extends CommonBean {
             frame.append("this.on('waiting',()=>{");
             frame.append("if (document.querySelector('.current') != null)");
             frame.append("document.querySelector('.current').style.animationPlayState = 'paused';");
-            frame.append("btn.innerText ='加载中...';");
+            frame.append("btn.innerText ='加载中';");
             frame.append("});");
             frame.append("this.on('play',()=>{");
             frame.append("player.playbackRate(rate);");
