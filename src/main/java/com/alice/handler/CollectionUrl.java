@@ -21,11 +21,6 @@ import java.util.regex.Pattern;
 @Component
 public class CollectionUrl extends CommonBean {
 
-
-    private String date = new SimpleDateFormat("yyyy/MM/dd").format(System.currentTimeMillis());
-//    private String date = new SimpleDateFormat("yyyy/MM/dd").format(System.currentTimeMillis()+1000*60*60*24);
-
-
     /**
      * 搜集连接 [url##name,url##name]
      *
@@ -144,14 +139,15 @@ public class CollectionUrl extends CommonBean {
         bbr.close();
         Document document = Jsoup.parse(ssb.toString());*/
 
-
+        //获取当天日期
+        String DATE = new SimpleDateFormat("yyyy/MM/dd").format(System.currentTimeMillis());
         Element table = document.getElementsByClass("list_musiclist").get(0);
         Elements trs = table.getElementsByTag("tr");
         for (int i = 1; i < trs.size(); i++) {
             Elements tds = trs.get(i).getElementsByTag("td");
             String id = tds.get(1).text();
             String datetime = tds.get(4).text();
-            if (date.equals(datetime)) {
+            if (DATE.equals(datetime)) {
                 listIds.add(id);
             }
         }

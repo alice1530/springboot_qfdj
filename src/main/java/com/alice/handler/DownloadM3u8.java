@@ -17,12 +17,12 @@ public class DownloadM3u8 extends CommonBean {
 
 
     private static final String PATH_SEPARATOR = File.separator;
-    private static final String DATE = new SimpleDateFormat("yyyy-MM-dd").format(System.currentTimeMillis());
-    //    private static final String DATE = new SimpleDateFormat("yyyy-MM-dd").format(System.currentTimeMillis()+1000*60*60*24);
     private static final String RUNTIME_DIR = System.getProperty("user.dir");
 
     public void handle() {
         try {
+            //获取当前时间
+            String DATE = new SimpleDateFormat("yyyy-MM-dd").format(System.currentTimeMillis());
             String userDir = static_file_path;
             if (userDir == null || "".equals(userDir.trim()))
                 userDir = RUNTIME_DIR;
@@ -110,7 +110,7 @@ public class DownloadM3u8 extends CommonBean {
                 userDir = RUNTIME_DIR;
             String baseDir = userDir;
             if (currentDir == null) {
-                currentDir = DATE;
+                currentDir = new SimpleDateFormat("yyyy-MM-dd").format(System.currentTimeMillis());
             }
             String url = finalUrl.split("##")[0];
             String musicName = finalUrl.split("##")[1];

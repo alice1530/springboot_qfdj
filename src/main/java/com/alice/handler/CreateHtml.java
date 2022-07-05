@@ -15,7 +15,6 @@ public class CreateHtml extends CommonBean {
 
     private static final String PATH_SEPARATOR = File.separator;
     private static final String RUNTIME_DIR = System.getProperty("user.dir");
-    private static final String date = new SimpleDateFormat("yyyy-MM-dd").format(System.currentTimeMillis());
 //    private static final String date = new SimpleDateFormat("yyyy-MM-dd").format(System.currentTimeMillis()+1000*60*60*24);
 
     /**
@@ -31,6 +30,8 @@ public class CreateHtml extends CommonBean {
         if(aday==null||"".equals(aday.trim()))
             aday="7";
 
+        //获取当前系统日期
+        String DATE = new SimpleDateFormat("yyyy-MM-dd").format(System.currentTimeMillis());
 
         String dir = userDir+PATH_SEPARATOR+"Music"+PATH_SEPARATOR;
         log.info("生成Html页面到：{}",dir);
@@ -66,17 +67,17 @@ public class CreateHtml extends CommonBean {
         }
 
 
-        try (OutputStreamWriter fw = new OutputStreamWriter(new FileOutputStream(dir+date+"/list"+date+".html"),"utf-8"); OutputStreamWriter wf = new OutputStreamWriter(new FileOutputStream(dir+"index.html"),"utf-8")) {
+        try (OutputStreamWriter fw = new OutputStreamWriter(new FileOutputStream(dir+DATE+"/list"+DATE+".html"),"utf-8"); OutputStreamWriter wf = new OutputStreamWriter(new FileOutputStream(dir+"index.html"),"utf-8")) {
 
             //生成列表
             StringBuilder sb = new StringBuilder();
             boolean hasItem=false;
             sb.append("<div class='sdate'>");
             //sb.append("<div style=\"text-align:center;background-color:yellow;margin:10px;padding:5px;\">");
-            sb.append("<span>"+date+"</span>");
+            sb.append("<span>"+DATE+"</span>");
             sb.append("</div>");
             sb.append("<ol>");
-            File f = new File(dir+date);
+            File f = new File(dir+DATE);
             String[] list = f.list();
             Arrays.sort(list, Collections.reverseOrder());
             for (int i = 0; i < list.length; i++)
@@ -119,6 +120,7 @@ public class CreateHtml extends CommonBean {
             frame.append("<h1 onclick='dspl()' id=\"showName\" style = \"color:red;text-align: center;\">点击列表↓↓↓↓播放音乐</h1>");
             //头部隐藏块
             frame.append("<div id='showView' style='display: none; flex-direction: column; align-items: center; justify-content: flex-start;'>");
+            frame.append("<a target='_blank' href='/gb.html'>不想听歌? 过来听广播吧！</a>");
             frame.append("<video id='my-player'  class='video-js vjs-big-play-centered'></video>");
             frame.append("<div><input id='range' type='range' value='1' min='0.1' max='2.5' step='0.1' onchange='changeV()'>");
             frame.append("<br>倍速:<label id='label' for='range'>1</label></div>");
@@ -212,12 +214,12 @@ public class CreateHtml extends CommonBean {
             frame.append("function search() {");
             frame.append("var inputId = document.getElementById('searchInput').value.trim();");
             frame.append("if(!inputId)return;");
-            frame.append("document.getElementById('searchA').innerText='处理中...';");
+            frame.append("document.getElementById('searchA').innerHTML = '<span style=\"color:red\">处理中...</span>';");
             frame.append("var xhr = new XMLHttpRequest();");
-            frame.append("xhr.open('get','/qfdj/'+inputId,true);");
+            frame.append("xhr.open('post','/qfdj/'+inputId,true);");
             frame.append("xhr.onload = function () {");
             frame.append("var data = xhr.responseText;");
-            frame.append("if(data.length<200){");
+            frame.append("if(xhr.status==200){");
             frame.append("if(data){");
             frame.append("var prefix = data.substring(1,data.lastIndexOf('/'));");
             frame.append("var suffix = data.substring(data.lastIndexOf('/')+1);");
@@ -230,11 +232,16 @@ public class CreateHtml extends CommonBean {
             frame.append("document.getElementById('searchA').innerText='';");
             frame.append("document.getElementById('searchA').appendChild(bb);");
             frame.append("}else{");
-            frame.append("document.getElementById('searchA').innerText='非法编号:'+inputId;");
+            frame.append("document.getElementById('searchA').innerHTML = '<span style=\"color:red\">非法编号: '+inputId+'</span>';");
             frame.append("}}else{");
-            frame.append("document.getElementById('searchA').innerText='未知错误';");
+            frame.append("console.log(xhr.status,xhr.responseText,xhr.getAllResponseHeaders());");
+            frame.append("document.getElementById('searchA').innerHTML='<span style=\"color:red\">未知错误!'+xhr.status+'</span>';");
             frame.append("};");
             frame.append("document.getElementById('searchInput').value='';");
+            frame.append("};");
+            frame.append("xhr.timeout=1000*60*1;");
+            frame.append("xhr.ontimeout=function(){");
+            frame.append("document.getElementById('searchA').innerHTML='<span style=\"color:red\">请求超时,请稍后再试!</span>';");
             frame.append("};");
             frame.append("xhr.send(null);");
             frame.append("};");

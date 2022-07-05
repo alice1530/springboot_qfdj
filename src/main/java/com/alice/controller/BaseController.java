@@ -7,10 +7,9 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.ResponseBody;
-
-import java.io.IOException;
 
 @Controller
 @RequestMapping("qfdj")
@@ -23,9 +22,10 @@ public class BaseController {
 
     private Logger log = LoggerFactory.getLogger(this.getClass());
 
-    @RequestMapping("/{id}")
+    @PostMapping("/{id}")
     @ResponseBody
     public String search(@PathVariable("id") String id){
+
         try {
             id = id.trim();
             Integer.parseInt(id);
@@ -47,7 +47,8 @@ public class BaseController {
                     if (downloadUrl != null) {
                         downloadUrl = downloadUrl.replace("\\", "/");
                         log.info("处理完成：{}", downloadUrl);
-                    }                    
+                    }
+                    //System.out.println(downloadUrl);
                 }else {
                     log.info("网络上无结果");
                 }
@@ -55,9 +56,10 @@ public class BaseController {
                 log.info("本地找到文件:{}",downloadUrl);
                 downloadUrl = downloadUrl.replace("\\", "/");
             }
-        } catch (IOException e) {
+        } catch (Exception e) {
             e.printStackTrace();
             log.error("解析错误：{}",e.getMessage());
+
         }
         return downloadUrl;
     }
