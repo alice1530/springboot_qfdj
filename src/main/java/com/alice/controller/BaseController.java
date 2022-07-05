@@ -24,22 +24,22 @@ public class BaseController {
 
     @PostMapping("/{id}")
     @ResponseBody
-    public String search(@PathVariable("id") String id){
+    public String search(@PathVariable("id") String id) {
 
         try {
             id = id.trim();
             Integer.parseInt(id);
-            if (id.length()<5||id.length()>6)return null;
+            if (id.length() < 5 || id.length() > 6) return null;
         } catch (Exception e) {
-            log.error("非法id:{}",e.getMessage());
+            log.error("非法id:{}", e.getMessage());
             return null;
         }
         String downloadUrl = null;
         try {
-            log.info("搜索下载id:{}",id);
+            log.info("搜索下载id:{}", id);
             log.info("先从本地文件查找...");
             downloadUrl = downloadM3u8.findFileById(id);
-            if (downloadUrl==null) {
+            if (downloadUrl == null) {
                 log.info("本地无缓存，从网络上下载...");
                 String urlAndName = collectionUrl.getUrlAndName(id);
                 if (urlAndName != null) {
@@ -49,16 +49,16 @@ public class BaseController {
                         log.info("处理完成：{}", downloadUrl);
                     }
                     //System.out.println(downloadUrl);
-                }else {
+                } else {
                     log.info("网络上无结果");
                 }
-            }else {
-                log.info("本地找到文件:{}",downloadUrl);
+            } else {
+                log.info("本地找到文件:{}", downloadUrl);
                 downloadUrl = downloadUrl.replace("\\", "/");
             }
         } catch (Exception e) {
             e.printStackTrace();
-            log.error("解析错误：{}",e.getMessage());
+            log.error("解析错误：{}", e.getMessage());
 
         }
         return downloadUrl;

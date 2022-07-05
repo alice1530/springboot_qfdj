@@ -21,3 +21,6 @@ qfdj:
 #  删除近N天前的文件，留空不填默认删除近7天前文件
 #  deleteNdays: 7
   deleteNdays: 7
+#  HTML页面列表底下自由文字支持HTML,例如:"<img src=\"favicon.ico\" width=\"50px\"></img>"
+#留空不填默认，根据定时任务和删除天数动态显示,例如: "每日13点10分更新，仅保留近7天的内容"
+  freedom_text: ""

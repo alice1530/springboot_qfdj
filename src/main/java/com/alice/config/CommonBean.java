@@ -30,7 +30,9 @@ public class CommonBean {
     @Value("${qfdj.deleteNdays}")
     protected String deleteNdays;
 
-    protected Logger log = LoggerFactory.getLogger(this.getClass());
+    @Value("${qfdj.freedom_text}")
+    protected String freedomText;
 
+    protected Logger log = LoggerFactory.getLogger(this.getClass());
 
 }
