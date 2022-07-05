@@ -328,7 +328,7 @@ public class DownloadM3u8 extends CommonBean {
             }
         }
         //删除搜索目录
-        String searchdownload =staticFilePath+PATH_SEPARATOR+"searchdownload";
+        String searchdownload = staticFilePath + PATH_SEPARATOR + "searchdownload";
         delFiles(searchdownload);
         log.info("删除结束！");
     }

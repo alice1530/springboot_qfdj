@@ -15,7 +15,7 @@ import java.io.InputStream;
 @SpringBootApplication
 public class App {
 
-    public static final Logger log= LoggerFactory.getLogger(App.class);
+    public static final Logger log = LoggerFactory.getLogger(App.class);
 
     public static void main(String[] args) {
         SpringApplication app = new SpringApplication(App.class);

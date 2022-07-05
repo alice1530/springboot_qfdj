@@ -17,14 +17,14 @@ public class MyScheduleTask extends CommonBean {
         try {
             long begin = System.currentTimeMillis();
             SimpleDateFormat f = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
-            log.info("[{}]定时任务开始......",f.format(begin));
+            log.info("[{}]定时任务开始......", f.format(begin));
             downloadM3u8.handle();
             //删除前几天的文件
             downloadM3u8.deleteNdays();
             //生成Html页面
             createHtml.createHtml();
             long end = System.currentTimeMillis();
-            log.info("[{}]定时任务结束!耗时:{}ms",f.format(end),end-begin);
+            log.info("[{}]定时任务结束!耗时:{}ms", f.format(end), end - begin);
         } catch (Exception e) {
             e.printStackTrace();
         }

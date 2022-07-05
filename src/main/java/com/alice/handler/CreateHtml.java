@@ -1,11 +1,12 @@
 package com.alice.handler;
 
 import com.alice.config.CommonBean;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 import org.springframework.util.FileCopyUtils;
+import org.springframework.util.StringUtils;
 
 import java.io.*;
-import java.text.SimpleDateFormat;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.Comparator;
@@ -15,84 +16,95 @@ public class CreateHtml extends CommonBean {
 
     private static final String PATH_SEPARATOR = File.separator;
     private static final String RUNTIME_DIR = System.getProperty("user.dir");
-//    private static final String date = new SimpleDateFormat("yyyy-MM-dd").format(System.currentTimeMillis()+1000*60*60*24);
+
+    @Value("${qfdj.task_cron}")
+    protected String taskCron;
 
     /**
      * 生成首页html
      */
-    public void createHtml(){
+    public void createHtml() {
 
         String userDir = static_file_path;
-        if(userDir==null||"".equals(userDir.trim()))
-            userDir=RUNTIME_DIR;
+        if (userDir == null || "".equals(userDir.trim()))
+            userDir = RUNTIME_DIR;
 
-        String aday  = deleteNdays;
-        if(aday==null||"".equals(aday.trim()))
-            aday="7";
+        String aday = deleteNdays;
+        if (aday == null || "".equals(aday.trim()))
+            aday = "7";
 
-        //获取当前系统日期
-        String DATE = new SimpleDateFormat("yyyy-MM-dd").format(System.currentTimeMillis());
-
-        String dir = userDir+PATH_SEPARATOR+"Music"+PATH_SEPARATOR;
-        log.info("生成Html页面到：{}",dir);
+        String dir = userDir + PATH_SEPARATOR + "Music" + PATH_SEPARATOR;
+        log.info("生成Html页面到：{}", dir);
         //复制所需的js和css文件
-        if(!new File(dir+"video.min.js").exists()){
+        if (!new File(dir + "video.min.js").exists()) {
             try {
-                InputStream i= this.getClass().getResource("video.min.js").openStream();
-                FileOutputStream o = new FileOutputStream(dir+"video.min.js");
+                InputStream i = this.getClass().getResource("video.min.js").openStream();
+                FileOutputStream o = new FileOutputStream(dir + "video.min.js");
                 FileCopyUtils.copy(i, o);
             } catch (IOException e) {
                 e.printStackTrace();
             }
         }
-        if(!new File(dir+"video-js.min.css").exists()){
+        if (!new File(dir + "video-js.min.css").exists()) {
             try {
-                InputStream i= this.getClass().getResource("video-js.min.css").openStream();
-                FileOutputStream o = new FileOutputStream(dir+"video-js.min.css");
-                FileCopyUtils.copy(i, o);
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
-
-        }
-        if(!new File(dir+"favicon.ico").exists()){
-            try {
-                InputStream i= this.getClass().getResource("favicon.ico").openStream();
-                FileOutputStream o = new FileOutputStream(dir+"favicon.ico");
+                InputStream i = this.getClass().getResource("video-js.min.css").openStream();
+                FileOutputStream o = new FileOutputStream(dir + "video-js.min.css");
                 FileCopyUtils.copy(i, o);
             } catch (IOException e) {
                 e.printStackTrace();
             }
 
         }
+        if (!new File(dir + "favicon.ico").exists()) {
+            try {
+                InputStream i = this.getClass().getResource("favicon.ico").openStream();
+                FileOutputStream o = new FileOutputStream(dir + "favicon.ico");
+                FileCopyUtils.copy(i, o);
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+
+        }
 
 
-        try (OutputStreamWriter fw = new OutputStreamWriter(new FileOutputStream(dir+DATE+"/list"+DATE+".html"),"utf-8"); OutputStreamWriter wf = new OutputStreamWriter(new FileOutputStream(dir+"index.html"),"utf-8")) {
+        OutputStreamWriter fw = null;
+        OutputStreamWriter wf = null;
+        try {
 
-            //生成列表
-            StringBuilder sb = new StringBuilder();
-            boolean hasItem=false;
-            sb.append("<div class='sdate'>");
-            //sb.append("<div style=\"text-align:center;background-color:yellow;margin:10px;padding:5px;\">");
-            sb.append("<span>"+DATE+"</span>");
-            sb.append("</div>");
-            sb.append("<ol>");
-            File f = new File(dir+DATE);
-            String[] list = f.list();
-            Arrays.sort(list, Collections.reverseOrder());
-            for (int i = 0; i < list.length; i++)
-                if (list[i].endsWith(".aac")){
-                    hasItem=true;
-                    sb.append("<li class=\"item\"> ");
-                    sb.append("<a id=\""+list[i].split("_")[0]+"\" onclick=\"play()\" >"+list[i]+ "</a>");
-                    sb.append("</li>\n");
+
+            //从本地文件夹，实时更新全部列表
+            File fdir = new File(dir);
+            File[] files = fdir.listFiles();
+            for (int i = 0; i < files.length; i++) {
+                File datedir = files[i];
+                if (datedir.getName().startsWith("20") && datedir.isDirectory()) {
+                    String datedirName = datedir.getName();
+                    fw = new OutputStreamWriter(new FileOutputStream(dir + datedirName + "/list" + datedirName + ".html"), "utf-8");
+                    //生成列表
+                    StringBuilder sb = new StringBuilder();
+                    boolean hasItem = false;
+                    sb.append("<div class='sdate'>");
+                    sb.append("<span>" + datedirName + "</span>");
+                    sb.append("</div>");
+                    sb.append("<ol>");
+                    File f = new File(dir + datedirName);
+                    String[] list = f.list();
+                    Arrays.sort(list, Collections.reverseOrder());
+                    for (int j = 0; j < list.length; j++)
+                        if (list[j].endsWith(".aac")) {
+                            hasItem = true;
+                            sb.append("<li class=\"item\"> ");
+                            sb.append("<a id=\"" + list[j].split("_")[0] + "\" onclick=\"play()\" >" + list[j] + "</a>");
+                            sb.append("</li>\n");
+                        }
+                    sb.append("</ol>");
+                    if (hasItem) {
+                        fw.write(sb.toString());
+                    }
+                    fw.flush();
+                    fw.close();
                 }
-            sb.append("</ol>");
-            if(hasItem){
-                fw.write(sb.toString());
             }
-            fw.flush();
-            fw.close();
 
             //生成首页+列表
             File fm = new File(dir);
@@ -135,16 +147,16 @@ public class CreateHtml extends CommonBean {
             frame.append("<h1 id=\"showDowload\" style = \"color:red;text-align: center;\"></h1>");
 
             //加载列表
-            Arrays.asList(listm).stream().filter( o-> o.isDirectory()&&o.getName().startsWith("20")).map(o->o.getName()).sorted(Comparator.reverseOrder()).forEach(dname -> {
+            Arrays.asList(listm).stream().filter(o -> o.isDirectory() && o.getName().startsWith("20")).map(o -> o.getName()).sorted(Comparator.reverseOrder()).forEach(dname -> {
 
-                        try{
-                            BufferedReader br = new BufferedReader(new FileReader(dir+dname+"/list"+dname+".html"));
+                        try {
+                            BufferedReader br = new BufferedReader(new FileReader(dir + dname + "/list" + dname + ".html"));
                             String len = null;
                             while ((len = br.readLine()) != null) {
                                 frame.append(len);
                             }
                             br.close();
-                        }catch (Exception e){
+                        } catch (Exception e) {
                             log.error(e.getMessage());
                         }
 
@@ -152,7 +164,18 @@ public class CreateHtml extends CommonBean {
                     }
             );
 
-            frame.append("<div>每日13点10分更新，仅保留近"+aday+"天的内容<div>");
+            //显示底部文字
+            String bottomText = "<div>每日13点10分更新，仅保留近" + aday + "天的内容<div>";
+            if (!StringUtils.isEmpty(taskCron)) {
+                String[] split = taskCron.split(" +");
+                bottomText = "<div>每日" + split[2] + "点" + split[1] + "分" + split[0] + "秒开始更新，仅保留近" + aday + "天的内容<div>";
+            }
+            //判断自由文本
+            if (!StringUtils.isEmpty(freedomText))
+                frame.append("<div>" + freedomText + "<div>");
+            else
+                frame.append(bottomText);
+
             frame.append(" <script type=\"text/javascript\">");
             //初始参数
             frame.append("let swich=true; ");
@@ -271,12 +294,26 @@ public class CreateHtml extends CommonBean {
             frame.append("</script>");
             frame.append("</body>");
             frame.append("</html>");
+            //写入html
+            wf = new OutputStreamWriter(new FileOutputStream(dir + "index.html"), "utf-8");
             wf.write(frame.toString());
             wf.flush();
             log.info("生成页面结束!");
         } catch (Exception e) {
             e.printStackTrace();
-            log.error("生成Html页面异常:",e.getMessage());
+            log.error("生成Html页面异常:", e.getMessage());
+        } finally {
+            try {
+                if (fw != null)
+                    fw.close();
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+            try {
+                if (wf != null) wf.close();
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
         }
 
     }

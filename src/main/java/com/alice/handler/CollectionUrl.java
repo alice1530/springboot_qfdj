@@ -46,7 +46,7 @@ public class CollectionUrl extends CommonBean {
             log.error("获取连接异常：{}", e.getMessage());
         }
 
-        log.info("音乐链接：{}",musicUrlAndName);
+        log.info("音乐链接：{}", musicUrlAndName);
         return musicUrlAndName;
     }
 
@@ -97,14 +97,14 @@ public class CollectionUrl extends CommonBean {
         //j2v8调用js解码
         V8 runtime = V8.createV8Runtime();
 //                String decodeJsPath=CollectionUrl.class.getResource("qfUrlDecode.js").getPath();
-        InputStream inputStream= this.getClass().getResource("qfUrlDecode.js").openStream();
+        InputStream inputStream = this.getClass().getResource("qfUrlDecode.js").openStream();
         BufferedInputStream br = new BufferedInputStream(inputStream);
 
         byte[] by = new byte[1024];
-        int len=0;
+        int len = 0;
         StringBuilder sb = new StringBuilder();
-        while ((len=br.read(by))!=-1) {
-            sb.append(new String(by,0,len,"utf-8"));
+        while ((len = br.read(by)) != -1) {
+            sb.append(new String(by, 0, len, "utf-8"));
         }
         String everything = sb.toString();
 
@@ -123,7 +123,7 @@ public class CollectionUrl extends CommonBean {
      */
     private List<String> getMusicId() throws IOException {
         String url = "https://www.vvvdj.com/sort/c1/";
-        log.info("每日最新来源地址：{}",url);
+        log.info("每日最新来源地址：{}", url);
         ArrayList<String> listIds = new ArrayList<>();
         Connection connect = Jsoup.connect(url);
         Document document = connect.get();
@@ -151,7 +151,7 @@ public class CollectionUrl extends CommonBean {
                 listIds.add(id);
             }
         }
-        log.info("音乐id:{}",listIds);
+        log.info("音乐id:{}", listIds);
         return listIds;
     }
 
