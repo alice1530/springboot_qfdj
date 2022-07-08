@@ -2,12 +2,14 @@ package com.alice.handler;
 
 import com.alice.config.CommonBean;
 import org.springframework.stereotype.Component;
+import org.springframework.util.StringUtils;
 
 import java.io.*;
 import java.net.URL;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -18,6 +20,8 @@ public class DownloadM3u8 extends CommonBean {
 
     private static final String PATH_SEPARATOR = File.separator;
     private static final String RUNTIME_DIR = System.getProperty("user.dir");
+    private Map<String, Integer> errorDownloadUrl = new ConcurrentHashMap<>();
+    private static boolean localListFirst;
 
     public void handle() {
         try {
@@ -33,7 +37,10 @@ public class DownloadM3u8 extends CommonBean {
             String dayPath = userDir + PATH_SEPARATOR + "Music" + PATH_SEPARATOR + DATE;
             String dayPathList = userDir + PATH_SEPARATOR + "Music" + PATH_SEPARATOR + DATE + PATH_SEPARATOR + DATE + ".list";
             File daylist = new File(dayPathList);
-            if (daylist.exists() && daylist.length() > 0) {
+
+            localListFirst = local_list_first;
+            log.info("是否优先从本地列表文件获取下载链接：{}", localListFirst);
+            if (localListFirst&&daylist.exists() && daylist.length() > 0) {
                 log.info("已存在当日列表文件：{}", dayPathList);
                 //从本地获取列表文件
                 try {
@@ -63,6 +70,8 @@ public class DownloadM3u8 extends CommonBean {
                 writer.flush();
                 writer.close();
             }
+
+
 //            if(true)return;
 
 
@@ -124,7 +133,8 @@ public class DownloadM3u8 extends CommonBean {
             String outfileDir = baseDir + PATH_SEPARATOR + "Music" + PATH_SEPARATOR + currentDir;
             String outfile = outfileDir + PATH_SEPARATOR + id + "_" + musicName + ".aac";
             String downloadUrl = PATH_SEPARATOR + currentDir + PATH_SEPARATOR + id + "_" + musicName + ".aac";
-            if (new File(outfile).exists()) {
+
+            if (localListFirst&&new File(outfile).exists()) {
                 log.debug(outfile + "   exists!");
                 return downloadUrl;
             }
@@ -136,12 +146,15 @@ public class DownloadM3u8 extends CommonBean {
             dir = new File(outfileDir);
             if (!dir.exists()) dir.mkdirs();
 
-
+            //下载m3u8
             File m3u8 = new File(downloadFile);
-            if (!m3u8.exists())
+            if (!localListFirst||!m3u8.exists())
                 downloadFile(url, downloadFile);
 
-            //存储ts文件
+            //如果有失败，尝试重新下载
+            retryDownload();
+
+            //下载存储ts文件
             List<String> filetxtList = new ArrayList<>();
             BufferedReader br = new BufferedReader(new FileReader(m3u8));
             String len = null;
@@ -157,6 +170,10 @@ public class DownloadM3u8 extends CommonBean {
                 filetxtList.add(tempfilepath);
             }
             br.close();
+
+
+            //如果有失败，尝试重新下载
+            retryDownload();
 
 
             //保存ts列表id.txt文件名
@@ -188,7 +205,7 @@ public class DownloadM3u8 extends CommonBean {
                         return downloadUrl;
                     }
                 }
-                String cmd = ffmpegPath + " -loglevel quiet -f concat -safe 0 -i " + filetxt + " -acodec copy " + outfile;
+                String cmd = ffmpegPath + " -y -loglevel quiet -f concat -safe 0 -i " + filetxt + " -acodec copy " + outfile;
                 log.debug("合成命令: " + cmd);
                 ProcessBuilder pb = new ProcessBuilder().command("cmd.exe", "/c", cmd).inheritIO();
                 pb.start().waitFor();
@@ -203,7 +220,7 @@ public class DownloadM3u8 extends CommonBean {
                         return downloadUrl;
                     }
                 }
-                String cmd = ffmpegPath + " -loglevel quiet -f concat -safe 0 -i " + filetxt + " -acodec copy " + outfile;
+                String cmd = ffmpegPath + " -y -loglevel quiet -f concat -safe 0 -i " + filetxt + " -acodec copy " + outfile;
                 log.debug("合成命令: " + cmd);
                 ProcessBuilder pb = new ProcessBuilder().command("sh", "-c", cmd).inheritIO();
                 //pb.redirectErrorStream(true);//这里是把控制台中的红字变成了黑字，用通常的方法其实获取不到，控制台的结果是pb.start()方法内部输出            的。
@@ -242,6 +259,34 @@ public class DownloadM3u8 extends CommonBean {
 
     }
 
+    private void retryDownload() {
+        int retryTimes=5;
+        if(!StringUtils.isEmpty(retry_times))
+            retryTimes =Integer.valueOf(retry_times);
+        //尝试重新下载失败的请求
+        while (!errorDownloadUrl.isEmpty()) {
+            Iterator<Map.Entry<String, Integer>> iterator = errorDownloadUrl.entrySet().iterator();
+            while (iterator.hasNext()){
+                Map.Entry<String, Integer> next = iterator.next();
+                String[] tmp = next.getKey().split("##");
+                String tmpurl = tmp[0];
+                String tempfilepath = tmp[1];
+                Integer value = next.getValue();
+                if (value <= retryTimes) {
+                    log.error("第{}次尝试下载:{}", value, tmpurl);
+                    if(downloadFile(tmpurl,tempfilepath)){
+                        //下载成功，移除列表
+                        iterator.remove();
+                    }
+                } else {
+                    //超过5次直接丢弃
+                    iterator.remove();
+                    log.error("超过{}次尝试，直接丢弃:{}", value, tmpurl);
+                }
+            }
+        }
+    }
+
     private void simpleMrege(String outfile, List<String> filetxtList) throws IOException {
         //ts合成，简单的流合并
         FileOutputStream out = new FileOutputStream(outfile);
@@ -258,10 +303,12 @@ public class DownloadM3u8 extends CommonBean {
         out.close();
     }
 
-    private void downloadFile(String url, String downloadFile) {
+    private boolean downloadFile(String url, String downloadFile) {
+
         OutputStream os = null;
         InputStream is = null;
         try {
+//            Thread.sleep(3000);
             URL u = new URL(url);
             os = new FileOutputStream(downloadFile);
             is = u.openStream();
@@ -272,21 +319,33 @@ public class DownloadM3u8 extends CommonBean {
                 os.write(b, 0, len);
             }
             log.debug(url + "  download success!");
-        } catch (IOException e) {
-            e.printStackTrace();
+            return true;
+        } catch (Exception e) {
+//            e.printStackTrace();
+            //记录错误url和路径,尝试重新请求
+            String key =url+"##"+downloadFile;
+            Integer count = errorDownloadUrl.get(key);
+            if (count != null) {
+                errorDownloadUrl.put(key, count+ 1);
+            } else {
+                errorDownloadUrl.put(key, 1);
+            }
             log.error(url + "  download field!");
         } finally {
             try {
+                if (os!=null)
                 os.close();
             } catch (IOException e) {
                 e.printStackTrace();
             }
             try {
+                if (is!=null)
                 is.close();
             } catch (IOException e) {
                 e.printStackTrace();
             }
         }
+        return false;
 
     }
 

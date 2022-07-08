@@ -33,6 +33,13 @@ public class CommonBean {
     @Value("${qfdj.freedom_text}")
     protected String freedomText;
 
+
+    @Value("${qfdj.local_list_first}")
+    protected boolean local_list_first;
+
+    @Value("${qfdj.retry_times}")
+    protected String retry_times;
+
     protected Logger log = LoggerFactory.getLogger(this.getClass());
 
 }

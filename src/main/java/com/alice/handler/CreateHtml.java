@@ -131,7 +131,7 @@ public class CreateHtml extends CommonBean {
             frame.append("</head><body style='font-size:smaller;background-color:#e4ebf8;display: flex; flex-direction: column;align-items: center;'>");
             frame.append("<h1 onclick='dspl()' id=\"showName\" style = \"color:red;text-align: center;\">点击列表↓↓↓↓播放音乐</h1>");
             //头部隐藏块
-            frame.append("<div id='showView' style='display: none; flex-direction: column; align-items: center; justify-content: flex-start;'>");            
+            frame.append("<div id='showView' style='display: none; flex-direction: column; align-items: center; justify-content: flex-start;'>");
             frame.append("<video id='my-player'  class='video-js vjs-big-play-centered'></video>");
             frame.append("<div><input id='range' type='range' value='1' min='0.1' max='2.5' step='0.1' onchange='changeV()'>");
             frame.append("<br>倍速:<label id='label' for='range'>1</label></div>");
@@ -141,7 +141,7 @@ public class CreateHtml extends CommonBean {
             //进度条
             frame.append("<div id=\"myProgress\" onmousedown=\"progress()\" style=\"display:none;cursor:pointer;overflow:hidden;padding-right:5px;border-radius:8px;position:relative;margin:20px;text-align:right; height:20px;width: 60%;color: white;background-color: #4CAF50;\">");
             frame.append("<span id=\"bid\"></span>");
-            frame.append("<div id=\"myBar\" style=\"cursor:pointer;position:absolute;left:0px;top:0px;float:left;width:1px;padding-right:5px;background-color:#ddd;height:100%;text-align:right;color: black;\"></div>");
+            frame.append("<div id=\"myBar\" style=\"cursor:pointer;position:absolute;left:0px;top:0px;float:left;width:1px;background-color:#ddd;height:100%;text-align:right;color: black;\"></div>");
             frame.append("</div>");
             //控制
             frame.append("<h1 id='control'  style='display:none;color:red;text-align: center;'>");
