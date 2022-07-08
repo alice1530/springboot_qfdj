@@ -132,7 +132,6 @@ public class CreateHtml extends CommonBean {
             frame.append("<h1 onclick='dspl()' id=\"showName\" style = \"color:red;text-align: center;\">点击列表↓↓↓↓播放音乐</h1>");
             //头部隐藏块
             frame.append("<div id='showView' style='display: none; flex-direction: column; align-items: center; justify-content: flex-start;'>");
-            frame.append("<a target='_blank' href='/gb.html'>不想听歌? 过来听广播吧！</a>");
             frame.append("<video id='my-player'  class='video-js vjs-big-play-centered'></video>");
             frame.append("<div><input id='range' type='range' value='1' min='0.1' max='2.5' step='0.1' onchange='changeV()'>");
             frame.append("<br>倍速:<label id='label' for='range'>1</label></div>");
