@@ -1,7 +1,6 @@
 package com.alice.handler;
 
 import com.alice.config.CommonBean;
-import com.eclipsesource.v8.V8;
 import org.jsoup.Connection;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
@@ -10,9 +9,7 @@ import org.jsoup.select.Elements;
 import org.springframework.stereotype.Component;
 import org.springframework.util.StringUtils;
 
-import java.io.BufferedInputStream;
 import java.io.IOException;
-import java.io.InputStream;
 import java.text.SimpleDateFormat;
 import java.util.*;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -64,7 +61,6 @@ public class CollectionUrl extends CommonBean {
                         iterator.remove();
                         musicUrlAndName.add(andName);
                         log.debug("id:{}===>{}",key,andName);
-
                     } else {
                         //超过5次直接丢弃
                         iterator.remove();
@@ -89,18 +85,6 @@ public class CollectionUrl extends CommonBean {
             //测试
             String url = "https://www.vvvdj.com/play/" + musicId + ".html";
             String html = Jsoup.connect(url).get().html();
-                /*new FileWriter("item_body.txt").write(html);
-                BufferedReader bbr = new BufferedReader(new FileReader("item_body.txt"));
-                StringBuilder ssb = new StringBuilder();
-                String len = null;
-                while ((len = bbr.readLine()) != null) {
-                    ssb.append(len);
-                    ssb.append("\r\n");
-                }
-                bbr.close();
-                String itemBody = ssb.toString();
-                System.out.println(itemBody);*/
-
 
             //获取加密字符串
             String a = "";
@@ -129,6 +113,7 @@ public class CollectionUrl extends CommonBean {
             }
 
             //j2v8调用js解码
+            /*
             V8 runtime = V8.createV8Runtime();
             InputStream inputStream = this.getClass().getResource("qfUrlDecode.js").openStream();
             BufferedInputStream br = new BufferedInputStream(inputStream);
@@ -144,17 +129,17 @@ public class CollectionUrl extends CommonBean {
             runtime.executeScript(everything);
             String playurl = (String) runtime.executeJSFunction("getDownloadUrl", a, b);
             runtime.release();
+            */
+
+            //调用解码
+            String playurl = decodeUrl(a,b);
+
             String result = "https:" + playurl + "##" + musicName;
             return result;
         } catch (Exception e) {
             //记录错误id,尝试重新请求
             log.error("获取音乐id={}链接异常:{}", musicId, e.getMessage());
-            Integer count = errorIds.get(musicId);
-            if (count != null) {
-                errorIds.put(musicId, count+ 1);
-            } else {
-                errorIds.put(musicId, 1);
-            }
+            errorIds.merge(musicId, 1, (a, b) -> a + b);
         }
         return null;
 
@@ -172,7 +157,7 @@ public class CollectionUrl extends CommonBean {
             String url = "https://www.vvvdj.com/sort/c1/";
             log.info("获取最新id列表信息...");
             log.info("每日最新来源地址：{}", url);
-            Thread.sleep(5000);
+//            Thread.sleep(5000);
             Connection connect = Jsoup.connect(url);
             Document document = connect.get();
 
@@ -189,7 +174,6 @@ public class CollectionUrl extends CommonBean {
                 }
             }
         } catch (Exception e) {
-//            e.printStackTrace();
             int retryTimes=5;
             if(!StringUtils.isEmpty(retry_times))
                 retryTimes =Integer.valueOf(retry_times);
@@ -201,4 +185,44 @@ public class CollectionUrl extends CommonBean {
         log.info("音乐id:{}", listIds);
         return listIds;
     }
+
+
+    /**
+     * url 解码
+     * @param a
+     * @param b
+     * @return
+     */
+    public String decodeUrl(String a, String b) {
+        int k,l,n,o,p;
+        int d = b.length();
+        int e = d;
+
+        char[] f = new char[d + 1];
+        char[] g = new char[d + 1];
+
+        for (l = 1; d >= l; l++) {
+            f[l] = b.charAt(l-1);
+            g[e] = f[l];
+            e -= 1;
+        }
+
+        String m = a.substring(0,2);
+        String i = a.substring(2);
+        String h = "";
+        String j;
+        for (l = 0; l < i.length(); l += 4) {
+            j = i.substring(l,l+4);
+            if (!"".equals(j)) {
+                b = j.substring(0,1);
+            }
+            k = (Integer.parseInt(j.substring(1)) - 100) / 3;
+            n = 2 * Integer.valueOf(b.charAt(0));
+            o = "e0".equals(m) ? Integer.valueOf(f[k]) : Integer.valueOf(g[k]);
+            p = n - o;
+            h += String.valueOf((char) p);
+        }
+        return h;
+    }
+
 }
