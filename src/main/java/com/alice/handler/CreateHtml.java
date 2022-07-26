@@ -94,7 +94,7 @@ public class CreateHtml extends CommonBean {
                         if (list[j].endsWith(".aac")) {
                             hasItem = true;
                             sb.append("<li class=\"item\"> ");
-                            sb.append("<a id=\"" + list[j].split("_")[0] + "\" onclick=\"play()\" >" + list[j] + "</a>");
+                            sb.append("<a id=\"" + list[j].split("_")[0] + "\">" + list[j] + "</a>");
                             sb.append("</li>\n");
                         }
                     sb.append("</ol>");
@@ -145,6 +145,8 @@ public class CreateHtml extends CommonBean {
             frame.append("<br>倍速:<label id='label' for='range'>1</label></div>");
             frame.append("<div><input type='number' id='searchInput' placeholder='请输入歌曲编号:'></input><button onclick='search()'>搜索</button></div>");
             frame.append("<span id='searchA'></span>");
+            frame.append("<div><input id='timeInput' type='number' value='30' min='1' max='1200'>分钟");
+            frame.append("<button onclick='timeOut()'>定时关闭</button></div>");
             frame.append("</div>");
             //进度条
             frame.append("<div id=\"myProgress\" onmousedown=\"progress()\" style=\"display:none;cursor:pointer;overflow:hidden;padding-right:5px;border-radius:8px;position:relative;margin:20px;text-align:right; height:20px;width: 60%;color: white;background-color: #4CAF50;\">");
@@ -189,12 +191,12 @@ public class CreateHtml extends CommonBean {
                 frame.append(bottomText);
 
 
-
 /*
+
             //原始js
             frame.append(" <script type=\"text/javascript\">");
             //初始参数
-            frame.append("let swich = true; let rate = 1; let MY_INTERVAL = null;");
+            frame.append("let isDspl = true; let rate = 1; let MY_INTERVAL = null;");
             frame.append("let MY_PROGRESS = document.getElementById('myProgress');");
             frame.append("let MY_BAR = document.getElementById('myBar');");
             frame.append("let SHOW_VIEW = document.getElementById('showView');");
@@ -205,9 +207,15 @@ public class CreateHtml extends CommonBean {
             frame.append("let BID = document.getElementById('bid');");
             frame.append("let CONTROL = document.getElementById('control');");
             frame.append("let BTN = CONTROL.children[1];");
+            frame.append("let MY_TIMEOUT=null;");
+            frame.append("let TIME_INPUT = document.getElementById('timeInput');");
+
+            //加载完成绑定事件
+            frame.append("window.onload = function() {");
+            frame.append("let list = document.querySelectorAll('a[id]');");
+            frame.append("list.forEach(item=>{item.addEventListener('click', play);});");
 
             //页面加载完成，video js 事件
-            frame.append("window.onload = function() {");
             frame.append("player = videojs('my-player', {");
             frame.append("poster: 'favicon.ico',");
             frame.append("autoplay: true,");
@@ -266,6 +274,20 @@ public class CreateHtml extends CommonBean {
             frame.append("player.playbackRate(rate);");
             frame.append("};");
 
+
+            //定时关闭
+            frame.append("function timeOut() {");
+            frame.append("let val= TIME_INPUT.value;");
+            frame.append("if(val&&val>0&&val<1200){");
+            frame.append("MY_TIMEOUT && (window.clearTimeout(MY_TIMEOUT),MY_TIMEOUT = null);");
+            frame.append("MY_TIMEOUT = window.setTimeout(()=>{");
+            frame.append("player.dispose();");
+            frame.append("document.body.innerHTML='定时结束,已销毁,请刷新！';");
+            frame.append("},val*60*1000);");
+            frame.append("TIME_INPUT.parentElement.innerHTML='<span style=\\'color:red\\'>定时关闭已开启['+new Date().toLocaleString('zh',{huor12:false})+']<br>将在'+val+'分钟后自动关闭(取消请刷新页面)</span>';");
+            frame.append("};");
+            frame.append("};");
+
             //播放
             frame.append("function play() {");
             frame.append("let aa = event.target;");
@@ -285,7 +307,7 @@ public class CreateHtml extends CommonBean {
 
             //显示
             frame.append("function dspl() {");
-            frame.append("if (swich = !swich)");
+            frame.append("if (isDspl = !isDspl)");
             frame.append("SHOW_VIEW.style.setProperty('display', 'none');");
             frame.append("else ");
             frame.append("SHOW_VIEW.style.setProperty('display', 'flex');");
@@ -406,8 +428,9 @@ public class CreateHtml extends CommonBean {
 */
             //压缩后的js,  https://www.qianbo.com.cn/Tool/Beautify/Js-Compress.html
             frame.append("<script type=\"text/javascript\">");
-            frame.append("let swich=!0,rate=1,MY_INTERVAL=null,MY_PROGRESS=document.getElementById(\"myProgress\"),MY_BAR=document.getElementById(\"myBar\"),SHOW_VIEW=document.getElementById(\"showView\"),SHOW_NAME=document.getElementById(\"showName\"),SHOW_DOWNLOAD=document.getElementById(\"showDownload\"),SEARCH_A=document.getElementById(\"searchA\"),SEARCH_INPUT=document.getElementById(\"searchInput\"),BID=document.getElementById(\"bid\"),CONTROL=document.getElementById(\"control\"),BTN=CONTROL.children[1];function changeV(){rate=document.getElementById(\"range\").value,document.getElementById(\"label\").innerText=rate,player.playbackRate(rate)}function play(){let e=event.target,t=e.id,n=e.parentElement.parentElement.previousElementSibling.innerText,r=e.textContent;document.querySelector(\".current\")&&document.querySelector(\".current\").setAttribute(\"class\",\"item\"),document.getElementById(t).parentElement.setAttribute(\"class\",\"current\"),SHOW_NAME.innerHTML=r,SHOW_DOWNLOAD.innerHTML=\"<a target='_blank' href='\"+n+\"/\"+r+\"'>↓下载↓</a>\",player.src([{src:n+\"/\"+t+\"/\"+t+\".m3u8\",type:\"application/x-mpegURL\"}]),SHOW_NAME.scrollIntoView({behavior:\"smooth\"}),CONTROL.style.setProperty(\"display\",\"block\"),MY_PROGRESS.style.setProperty(\"display\",\"block\"),SEARCH_A.innerText=\"\"}function dspl(){(swich=!swich)?SHOW_VIEW.style.setProperty(\"display\",\"none\"):SHOW_VIEW.style.setProperty(\"display\",\"flex\")}function progress(){let e=MY_PROGRESS,t=e.offsetWidth,n=getOffsetLeft(e),r=((event.clientX+document.body.scrollLeft-n)/t*100).toFixed(2);player.currentTime(player.duration()*r/100)}function getOffsetLeft(e){let t=e.offsetLeft,n=e.offsetParent;for(;null!=n;)t+=n.offsetLeft,n=n.offsetParent;return t}function getTime(e){let t=Math.floor(e/3600),n=Math.floor(e%3600/60),r=Math.floor(e%60);return(t>9?t:\"0\"+t)+\":\"+(n>9?n:\"0\"+n)+\":\"+(r>9?r:\"0\"+r)}function search(){let e=SEARCH_INPUT.value.trim();if(!e)return;SEARCH_A.innerHTML=\"<span style='color:red'>处理中...</span>\";let t=new XMLHttpRequest;t.open(\"post\",\"/qfdj/\"+e,!0),t.onload=function(){let n=t.responseText;if(200==t.status)if(n){let t=n.substring(1,n.lastIndexOf(\"/\")),r=n.substring(n.lastIndexOf(\"/\")+1),l=document.createElement(\"a\");player.src([{src:t+\"/\"+e+\"/\"+e+\".m3u8\",type:\"application/x-mpegURL\"}]),l.href=n,l.target=\"_blank\",l.innerText=r,SHOW_NAME.innerHTML=r,SEARCH_A.innerText=\"\",SEARCH_A.appendChild(l),null!=document.querySelector(\".current\")&&document.querySelector(\".current\").setAttribute(\"class\",\"item\")}else SEARCH_A.innerHTML=\"<span style='color:red'>非法编号: \"+e+\"</span>\";else console.log(t.status,t.responseText,t.getAllResponseHeaders()),SEARCH_A.innerHTML=\"<span style='color:red'>未知错误!\"+t.status+\"</span>\";SEARCH_INPUT.value=\"\"},t.timeout=18e4,t.ontimeout=function(){SEARCH_A.innerHTML=\"<span style='color:red'>请求超时,请稍后再试!</span>\"},t.send(null)}function prevNext(e){let t=document.querySelectorAll(\"a[id]\"),n=0,r=player.currentSrc();if(r){let l=r.substr(r.lastIndexOf(\"/\")+1,r.length-r.lastIndexOf(\".\")+1);t.forEach((t,r,o)=>{t.id==l&&(n=r+e)})}t[n=(n=n<0?t.length-1:n)>t.length-1?0:n].click()}function continuePlay(){player.paused()?(player.src([{src:player.currentSrc(),type:\"application/x-mpegURL\"}]),player.currentTime(player.currentTime())):(player.pause(),MY_INTERVAL&&(clearInterval(MY_INTERVAL),MY_INTERVAL=null))}window.onload=function(){player=videojs(\"my-player\",{poster:\"favicon.ico\",autoplay:!0,controls:!0,preload:\"auto\"},function(){this.on(\"ended\",()=>{prevNext(1)}),this.on(\"waiting\",()=>{document.querySelector(\".current\")&&(document.querySelector(\".current\").style.animationPlayState=\"paused\"),BTN.innerText=\"加载中\"}),this.on(\"error\",()=>{MY_INTERVAL&&(this.clearInterval(MY_INTERVAL),MY_INTERVAL=null),MY_INTERVAL=this.setInterval(()=>{this.src([{src:this.currentSrc(),type:\"application/x-mpegURL\"}]),this.currentTime(this.currentTime())},1e4)}),this.on(\"loadedmetadata\",()=>{player.playbackRate(rate),MY_INTERVAL&&(this.clearInterval(MY_INTERVAL),MY_INTERVAL=null)}),this.on(\"timeupdate\",()=>{let e=this.currentTime(),t=(e/this.duration()*100).toFixed(2),n=getTime(e);MY_BAR.style.width=t+\"%\",MY_BAR.innerText=n,BID.innerText=\"-\"+getTime(this.remainingTime())}),this.on(\"playing\",()=>{document.querySelector(\".current\")&&(document.querySelector(\".current\").style.animationPlayState=\"running\"),BTN.innerText=\"播放中\"}),this.on(\"pause\",()=>{document.querySelector(\".current\")&&(document.querySelector(\".current\").style.animationPlayState=\"paused\"),BTN.innerText=\"已暂停\"})})},document.addEventListener(\"keydown\",e=>{if(e.ctrlKey&&37===e.keyCode)prevNext(-1);else if(e.ctrlKey&&39===e.keyCode)prevNext(1);else if(e.ctrlKey&&38===e.keyCode){let e=player.volume()+.1;player.volume(e>1?1:e)}else if(e.ctrlKey&&40===e.keyCode){let e=player.volume()-.1;player.volume(e<0?0:e)}else 32===e.keyCode&&(player.currentSrc()?continuePlay():prevNext())});");
+            frame.append("let isDspl=!0,rate=1,MY_INTERVAL=null,MY_PROGRESS=document.getElementById(\"myProgress\"),MY_BAR=document.getElementById(\"myBar\"),SHOW_VIEW=document.getElementById(\"showView\"),SHOW_NAME=document.getElementById(\"showName\"),SHOW_DOWNLOAD=document.getElementById(\"showDownload\"),SEARCH_A=document.getElementById(\"searchA\"),SEARCH_INPUT=document.getElementById(\"searchInput\"),BID=document.getElementById(\"bid\"),CONTROL=document.getElementById(\"control\"),BTN=CONTROL.children[1],MY_TIMEOUT=null,TIME_INPUT=document.getElementById(\"timeInput\");function changeV(){rate=document.getElementById(\"range\").value,document.getElementById(\"label\").innerText=rate,player.playbackRate(rate)}function timeOut(){let e=TIME_INPUT.value;e&&e>0&&e<1200&&(MY_TIMEOUT&&(window.clearTimeout(MY_TIMEOUT),MY_TIMEOUT=null),MY_TIMEOUT=window.setTimeout(()=>{player.dispose(),document.body.innerHTML=\"定时结束,已销毁,请刷新！\"},60*e*1e3),TIME_INPUT.parentElement.innerHTML=\"<span style='color:red'>定时关闭已开启[\"+(new Date).toLocaleString(\"zh\",{huor12:!1})+\"]<br>将在\"+e+\"分钟后自动关闭(取消请刷新页面)</span>\")}function play(){let e=event.target,t=e.id,n=e.parentElement.parentElement.previousElementSibling.innerText,r=e.textContent;document.querySelector(\".current\")&&document.querySelector(\".current\").setAttribute(\"class\",\"item\"),document.getElementById(t).parentElement.setAttribute(\"class\",\"current\"),SHOW_NAME.innerHTML=r,SHOW_DOWNLOAD.innerHTML=\"<a target='_blank' href='\"+n+\"/\"+r+\"'>↓下载↓</a>\",player.src([{src:n+\"/\"+t+\"/\"+t+\".m3u8\",type:\"application/x-mpegURL\"}]),SHOW_NAME.scrollIntoView({behavior:\"smooth\"}),CONTROL.style.setProperty(\"display\",\"block\"),MY_PROGRESS.style.setProperty(\"display\",\"block\"),SEARCH_A.innerText=\"\"}function dspl(){(isDspl=!isDspl)?SHOW_VIEW.style.setProperty(\"display\",\"none\"):SHOW_VIEW.style.setProperty(\"display\",\"flex\")}function progress(){let e=MY_PROGRESS,t=e.offsetWidth,n=getOffsetLeft(e),r=((event.clientX+document.body.scrollLeft-n)/t*100).toFixed(2);player.currentTime(player.duration()*r/100)}function getOffsetLeft(e){let t=e.offsetLeft,n=e.offsetParent;for(;null!=n;)t+=n.offsetLeft,n=n.offsetParent;return t}function getTime(e){let t=Math.floor(e/3600),n=Math.floor(e%3600/60),r=Math.floor(e%60);return(t>9?t:\"0\"+t)+\":\"+(n>9?n:\"0\"+n)+\":\"+(r>9?r:\"0\"+r)}function search(){let e=SEARCH_INPUT.value.trim();if(!e)return;SEARCH_A.innerHTML=\"<span style='color:red'>处理中...</span>\";let t=new XMLHttpRequest;t.open(\"post\",\"/qfdj/\"+e,!0),t.onload=function(){let n=t.responseText;if(200==t.status)if(n){let t=n.substring(1,n.lastIndexOf(\"/\")),r=n.substring(n.lastIndexOf(\"/\")+1),l=document.createElement(\"a\");player.src([{src:t+\"/\"+e+\"/\"+e+\".m3u8\",type:\"application/x-mpegURL\"}]),l.href=n,l.target=\"_blank\",l.innerText=r,SHOW_NAME.innerHTML=r,SEARCH_A.innerText=\"\",SEARCH_A.appendChild(l),null!=document.querySelector(\".current\")&&document.querySelector(\".current\").setAttribute(\"class\",\"item\")}else SEARCH_A.innerHTML=\"<span style='color:red'>非法编号: \"+e+\"</span>\";else console.log(t.status,t.responseText,t.getAllResponseHeaders()),SEARCH_A.innerHTML=\"<span style='color:red'>未知错误!\"+t.status+\"</span>\";SEARCH_INPUT.value=\"\"},t.timeout=18e4,t.ontimeout=function(){SEARCH_A.innerHTML=\"<span style='color:red'>请求超时,请稍后再试!</span>\"},t.send(null)}function prevNext(e){let t=document.querySelectorAll(\"a[id]\"),n=0,r=player.currentSrc();if(r){let l=r.substr(r.lastIndexOf(\"/\")+1,r.length-r.lastIndexOf(\".\")+1);t.forEach((t,r,o)=>{t.id==l&&(n=r+e)})}t[n=(n=n<0?t.length-1:n)>t.length-1?0:n].click()}function continuePlay(){player.paused()?(player.src([{src:player.currentSrc(),type:\"application/x-mpegURL\"}]),player.currentTime(player.currentTime())):(player.pause(),MY_INTERVAL&&(clearInterval(MY_INTERVAL),MY_INTERVAL=null))}window.onload=function(){document.querySelectorAll(\"a[id]\").forEach(e=>{e.addEventListener(\"click\",play)}),player=videojs(\"my-player\",{poster:\"favicon.ico\",autoplay:!0,controls:!0,preload:\"auto\"},function(){this.on(\"ended\",()=>{prevNext(1)}),this.on(\"waiting\",()=>{document.querySelector(\".current\")&&(document.querySelector(\".current\").style.animationPlayState=\"paused\"),BTN.innerText=\"加载中\"}),this.on(\"error\",()=>{MY_INTERVAL&&(this.clearInterval(MY_INTERVAL),MY_INTERVAL=null),MY_INTERVAL=this.setInterval(()=>{this.src([{src:this.currentSrc(),type:\"application/x-mpegURL\"}]),this.currentTime(this.currentTime())},1e4)}),this.on(\"loadedmetadata\",()=>{player.playbackRate(rate),MY_INTERVAL&&(this.clearInterval(MY_INTERVAL),MY_INTERVAL=null)}),this.on(\"timeupdate\",()=>{let e=this.currentTime(),t=(e/this.duration()*100).toFixed(2),n=getTime(e);MY_BAR.style.width=t+\"%\",MY_BAR.innerText=n,BID.innerText=\"-\"+getTime(this.remainingTime())}),this.on(\"playing\",()=>{document.querySelector(\".current\")&&(document.querySelector(\".current\").style.animationPlayState=\"running\"),BTN.innerText=\"播放中\"}),this.on(\"pause\",()=>{document.querySelector(\".current\")&&(document.querySelector(\".current\").style.animationPlayState=\"paused\"),BTN.innerText=\"已暂停\"})})},document.addEventListener(\"keydown\",e=>{if(e.ctrlKey&&37===e.keyCode)prevNext(-1);else if(e.ctrlKey&&39===e.keyCode)prevNext(1);else if(e.ctrlKey&&38===e.keyCode){let e=player.volume()+.1;player.volume(e>1?1:e)}else if(e.ctrlKey&&40===e.keyCode){let e=player.volume()-.1;player.volume(e<0?0:e)}else 32===e.keyCode&&(player.currentSrc()?continuePlay():prevNext())});");
             frame.append("</script>");
+
             frame.append("</body>");
             frame.append("</html>");
             //写入html
