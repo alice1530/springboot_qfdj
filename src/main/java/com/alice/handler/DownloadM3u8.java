@@ -122,7 +122,7 @@ public class DownloadM3u8 extends CommonBean {
                 currentDir = new SimpleDateFormat("yyyy-MM-dd").format(System.currentTimeMillis());
             }
             String url = finalUrl.split("##")[0];
-            String musicName = finalUrl.split("##")[1];
+            String musicName = finalUrl.split("##")[1].replaceAll("\\s+","");
             log.debug("当前进程的工作空间:" + baseDir);
             String baseUrl = url.substring(0, url.lastIndexOf("/") + 1);
             String fileName = url.substring(url.lastIndexOf("/") + 1, url.lastIndexOf("?"));
@@ -195,9 +195,9 @@ public class DownloadM3u8 extends CommonBean {
 
             boolean isWin = System.getProperties().getProperty("os.name").toLowerCase().contains("win");
             if (isWin) {
-                String ffmpegPath = RUNTIME_DIR + PATH_SEPARATOR + "ffmpeg.exe ";
+                String ffmpegPath = RUNTIME_DIR + PATH_SEPARATOR + "ffmpeg.exe";
                 if (!new File(ffmpegPath).exists()) {
-                    ffmpegPath = baseDir + PATH_SEPARATOR + "ffmpeg.exe";
+                    ffmpegPath = baseDir + PATH_SEPARATOR +"Music"+PATH_SEPARATOR+ "ffmpeg.exe";
                     if (!new File(ffmpegPath).exists()) {
                         log.error("Not Fund ffmpeg.exe file ");
                         log.error("找不到ffmpeg.exe文件，使用简单stream流合成，效果不如ffmpeg合成");
@@ -205,14 +205,14 @@ public class DownloadM3u8 extends CommonBean {
                         return downloadUrl;
                     }
                 }
-                String cmd = ffmpegPath + " -y -loglevel quiet -f concat -safe 0 -i " + filetxt + " -acodec copy " + outfile;
+                String cmd = ffmpegPath + " -y  -loglevel quiet -f concat -safe 0 -i \"" + filetxt + "\" -acodec copy \"" + outfile+"\"";
                 log.debug("合成命令: " + cmd);
                 ProcessBuilder pb = new ProcessBuilder().command("cmd.exe", "/c", cmd).inheritIO();
                 pb.start().waitFor();
             } else {
-                String ffmpegPath = RUNTIME_DIR + PATH_SEPARATOR + "ffmpeg ";
+                String ffmpegPath = RUNTIME_DIR + PATH_SEPARATOR + "ffmpeg";
                 if (!new File(ffmpegPath).exists()) {
-                    ffmpegPath = baseDir + PATH_SEPARATOR + "ffmpeg";
+                    ffmpegPath = baseDir + PATH_SEPARATOR +"Music"+PATH_SEPARATOR+ "ffmpeg";
                     if (!new File(ffmpegPath).exists()) {
                         log.error("Not Fund ffmpeg file ");
                         log.error("找不到ffmpeg文件，使用简单stream流合成，效果不如ffmpeg合成");
@@ -220,7 +220,7 @@ public class DownloadM3u8 extends CommonBean {
                         return downloadUrl;
                     }
                 }
-                String cmd = ffmpegPath + " -y -loglevel quiet -f concat -safe 0 -i " + filetxt + " -acodec copy " + outfile;
+                String cmd = ffmpegPath + " -y  -loglevel quiet -f concat -safe 0 -i \"" + filetxt + "\" -acodec copy \"" + outfile+"\"";
                 log.debug("合成命令: " + cmd);
                 ProcessBuilder pb = new ProcessBuilder().command("sh", "-c", cmd).inheritIO();
                 //pb.redirectErrorStream(true);//这里是把控制台中的红字变成了黑字，用通常的方法其实获取不到，控制台的结果是pb.start()方法内部输出            的。
