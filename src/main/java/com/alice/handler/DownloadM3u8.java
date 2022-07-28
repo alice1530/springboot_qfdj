@@ -6,6 +6,7 @@ import org.springframework.util.StringUtils;
 
 import java.io.*;
 import java.net.URL;
+import java.net.URLConnection;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.*;
@@ -74,10 +75,15 @@ public class DownloadM3u8 extends CommonBean {
 
 //            if(true)return;
 
+            Integer threadNumber = 5;
+            if (!StringUtils.isEmpty(download_threads_number)) {
+                int num = Integer.parseInt(download_threads_number);
+                threadNumber = num>0&&num<20? num:20;
+            }
 
             //使用线程池，10个线程一组
-            ExecutorService pool = Executors.newFixedThreadPool(10);
-            log.info("开启10个线程进行处理....");
+            ExecutorService pool = Executors.newFixedThreadPool(threadNumber);
+            log.info("开启{}个线程进行处理....",threadNumber);
             int musicSize = musicList.size();
             AtomicInteger count = new AtomicInteger(musicSize);
             if (musicList != null && musicList.size() > 0) {
@@ -99,9 +105,9 @@ public class DownloadM3u8 extends CommonBean {
             while (!pool.isTerminated()) ;
             log.info("下载合并结束!");
 
-        } catch (
-                Exception e) {
+        } catch (Exception e) {
             e.printStackTrace();
+            log.error("异常:{}",e.getMessage());
         }
     }
 
@@ -311,7 +317,11 @@ public class DownloadM3u8 extends CommonBean {
 //            Thread.sleep(3000);
             URL u = new URL(url);
             os = new FileOutputStream(downloadFile);
-            is = u.openStream();
+//            is = u.openStream();
+            URLConnection connection = u.openConnection();
+            connection.setConnectTimeout(3*1000);
+            connection.setReadTimeout(2*1000);
+            is = connection.getInputStream();
 
             int len = 0;
             byte[] b = new byte[1024];
@@ -330,7 +340,7 @@ public class DownloadM3u8 extends CommonBean {
             } else {
                 errorDownloadUrl.put(key, 1);
             }
-            log.error(url + "  download field!");
+            log.error(url + "  download field! :{}",e.getMessage());
         } finally {
             try {
                 if (os!=null)
