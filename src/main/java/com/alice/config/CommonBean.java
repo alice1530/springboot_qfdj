@@ -39,6 +39,8 @@ public class CommonBean {
 
     @Value("${qfdj.retry_times}")
     protected String retry_times;
+    @Value("${qfdj.download_threads_number}")
+    protected String download_threads_number;
 
     protected Logger log = LoggerFactory.getLogger(this.getClass());
 

@@ -11,7 +11,7 @@ logging:
   level:
     com.alice: info
     org.springframework: error
-  file: ./springboot_qfdj.log
+  file: ./Music/springboot_qfdj.log
 qfdj:
   #  文件下载路径，留空不填默认与jar同级目录下
   #  static_file_path: D:\Desktop\Desktop\stat
@@ -20,10 +20,13 @@ qfdj:
   task_cron: "0 0 13,16 * * ?"
   #  删除近N天前的文件，留空不填默认删除近7天前文件
   deleteNdays: 7
-  #  请求失败重试次数
+  #  下载请求失败重试次数
   retry_times: 5
+  # 下线处理线程个数，默认5个线程处理，超过20个线程按20个处理
+  download_threads_number: 5
   #  true:优先从本地列表获取下载链接,避免网络请求。false:每次都网络请求
   local_list_first: true
   #  HTML页面列表底下自由文字支持HTML,例如:"<img src=\"favicon.ico\" width=\"50px\"></img>"
   #  留空不填默认，根据定时任务和删除天数动态显示,例如: "每日13点10分更新，仅保留近7天的内容"
   freedom_text: ""
+

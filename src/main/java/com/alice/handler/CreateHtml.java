@@ -114,7 +114,7 @@ public class CreateHtml extends CommonBean {
             frame.append("<head><meta http-equiv=\"Content-Type\" content=\"text/html; charset=utf-8\">");
 /*
             //原始css
-            frame.append("<style type=\"text/css\">h1>a:active{background:#b4d7d9;box-shadow:none;}</style>");
+            frame.append("<style type=\"text/css\">* {user-select: none;} h1>a:active{background:#b4d7d9;box-shadow:none;}</style>");
             frame.append("<style type=\"text/css\">h1>a{padding:10px;border-radius:5px;margin-left:20px;margin-right:20px;box-shadow:0.3rem 0.3rem 0.6rem #c8d0e7, -0.2rem -0.2rem 0.5rem #c8d0e7;}</style>");
             frame.append("<style type=\"text/css\">li{text-align-last:justify;border:solid 1px #d6fdff;margin:2px;width:580px}</style>");
             frame.append("<style type=\"text/css\">li:nth-child(odd){background-color:#ffc0cb3b;}</style>");
@@ -130,7 +130,7 @@ public class CreateHtml extends CommonBean {
 
             //压缩后的css,  http://www.esjson.com/cssformat.html
             frame.append("<style type=\"text/css\">");
-            frame.append("h1>a:active {background: #b4d7d9;box-shadow: none;}h1>a {padding: 10px;border-radius: 5px;margin-left: 20px;margin-right: 20px;box-shadow: 0.3rem 0.3rem 0.6rem #c8d0e7, -0.2rem -0.2rem 0.5rem #c8d0e7;}li {text-align-last: justify;border: solid 1px #d6fdff;margin: 2px;width: 580px }li:nth-child(odd) {background-color: #ffc0cb3b;}li:nth-child(even) {background-color: #aacaff3b;}li.current {border: solid 1px;font-size: initial;width: 725px;text-align: center;background-color: greenyellow;animation-name: current_ant;animation-duration: 2s;animation-iteration-count: infinite;animation-direction: alternate;}@keyframes current_ant {from {transform: scale(1,1) }to {transform: scale(0.8,0.8) }}h1 {cursor: pointer;}a {text-decoration: none;font-size: larger;color: blue;cursor: pointer;}ol {display: flex;flex-direction: column;align-items: center;padding: 10px;width: 80%;box-shadow: 0.3rem 0.3rem 0.6rem #c8d0e7, -0.2rem -0.2rem 0.5rem #ffffff;}.sdate {margin-top: 40px;font-size: x-large;text-align: center;width: 90%;height: 30px;border-radius: 0.3em;box-shadow: 0.3rem 0.3rem 0.6rem #c8d0e7, -0.2rem -0.2rem 0.5rem #ffffff;}");
+            frame.append("* {user-select: none;} h1>a:active {background: #b4d7d9;box-shadow: none;}h1>a {padding: 10px;border-radius: 5px;margin-left: 20px;margin-right: 20px;box-shadow: 0.3rem 0.3rem 0.6rem #c8d0e7, -0.2rem -0.2rem 0.5rem #c8d0e7;}li {text-align-last: justify;border: solid 1px #d6fdff;margin: 2px;width: 580px }li:nth-child(odd) {background-color: #ffc0cb3b;}li:nth-child(even) {background-color: #aacaff3b;}li.current {border: solid 1px;font-size: initial;width: 725px;text-align: center;background-color: greenyellow;animation-name: current_ant;animation-duration: 2s;animation-iteration-count: infinite;animation-direction: alternate;}@keyframes current_ant {from {transform: scale(1,1) }to {transform: scale(0.8,0.8) }}h1 {cursor: pointer;}a {text-decoration: none;font-size: larger;color: blue;cursor: pointer;}ol {display: flex;flex-direction: column;align-items: center;padding: 10px;width: 80%;box-shadow: 0.3rem 0.3rem 0.6rem #c8d0e7, -0.2rem -0.2rem 0.5rem #ffffff;}.sdate {margin-top: 40px;font-size: x-large;text-align: center;width: 90%;height: 30px;border-radius: 0.3em;box-shadow: 0.3rem 0.3rem 0.6rem #c8d0e7, -0.2rem -0.2rem 0.5rem #ffffff;}");
             frame.append("</style>");
 
 //            frame.append("<link rel=\"stylesheet\" href=\"video-js.min.css\">");
