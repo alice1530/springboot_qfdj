@@ -18,6 +18,18 @@ public class MyScheduleTask extends CommonBean {
             long begin = System.currentTimeMillis();
             SimpleDateFormat f = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
             log.info("[{}]定时任务开始......", f.format(begin));
+            log.info("配置文件参数如下：");
+            log.info("-----------------------");
+            log.info("文件存放路径=[{}]", staticFilePath);
+            log.info("定时任务时间=[{}]", taskCron);
+            log.info("保留文件天数=[{}]", deleteNDays);
+            log.info("失败重试次数=[{}]", retryTimes);
+            log.info("下载线程个数=[{}]", downloadThreadsNumber);
+            log.info("连接超时时间=[{}]", connectTimedOut);
+            log.info("列表本地优先=[{}]", localListFirst);
+            log.info("自定义的文本=[{}]", freedomText);
+            log.info("-----------------------");
+
             downloadM3u8.handle();
             //删除前几天的文件
             downloadM3u8.deleteNdays();
@@ -33,9 +45,8 @@ public class MyScheduleTask extends CommonBean {
     //启动时执行一次
     @PostConstruct
     private void startRunOnce() {
-        new Thread(() -> {
-            run();
-        }).start();
+
+        new Thread(() -> run()).start();
     }
 
 }

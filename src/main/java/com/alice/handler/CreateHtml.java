@@ -1,7 +1,6 @@
 package com.alice.handler;
 
 import com.alice.config.CommonBean;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 import org.springframework.util.FileCopyUtils;
 import org.springframework.util.StringUtils;
@@ -17,19 +16,16 @@ public class CreateHtml extends CommonBean {
     private static final String PATH_SEPARATOR = File.separator;
     private static final String RUNTIME_DIR = System.getProperty("user.dir");
 
-    @Value("${qfdj.task_cron}")
-    protected String taskCron;
-
     /**
      * 生成首页html
      */
     public void createHtml() {
 
-        String userDir = static_file_path;
+        String userDir = staticFilePath;
         if (userDir == null || "".equals(userDir.trim()))
             userDir = RUNTIME_DIR;
 
-        String aday = deleteNdays;
+        String aday = deleteNDays;
         if (aday == null || "".equals(aday.trim()))
             aday = "7";
 
@@ -45,6 +41,7 @@ public class CreateHtml extends CommonBean {
                 e.printStackTrace();
             }
         }
+        /*
         if (!new File(dir + "video-js.min.css").exists()) {
             try {
                 InputStream i = this.getClass().getResource("video-js.min.css").openStream();
@@ -55,6 +52,7 @@ public class CreateHtml extends CommonBean {
             }
 
         }
+        */
         if (!new File(dir + "favicon.ico").exists()) {
             try {
                 InputStream i = this.getClass().getResource("favicon.ico").openStream();

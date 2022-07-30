@@ -25,22 +25,28 @@ public class CommonBean {
     protected Environment environment;
 
     @Value("${qfdj.static_file_path}")
-    protected String static_file_path;
+    protected String staticFilePath;
 
-    @Value("${qfdj.deleteNdays}")
-    protected String deleteNdays;
+    @Value("${qfdj.task_cron}")
+    protected String taskCron;
+
+    @Value("${qfdj.delete_n_days}")
+    protected String deleteNDays;
 
     @Value("${qfdj.freedom_text}")
     protected String freedomText;
 
-
     @Value("${qfdj.local_list_first}")
-    protected boolean local_list_first;
+    protected boolean localListFirst;
 
     @Value("${qfdj.retry_times}")
-    protected String retry_times;
+    protected String retryTimes;
+
     @Value("${qfdj.download_threads_number}")
-    protected String download_threads_number;
+    protected String downloadThreadsNumber;
+
+    @Value("${qfdj.connect_timed_out}")
+    protected String connectTimedOut;
 
     protected Logger log = LoggerFactory.getLogger(this.getClass());
 
