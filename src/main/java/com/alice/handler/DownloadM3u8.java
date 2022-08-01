@@ -94,6 +94,7 @@ public class DownloadM3u8 extends CommonBean {
             log.info("开启{}个线程进行处理....",threadNumber);
             int musicSize = musicList.size();
             AtomicInteger count = new AtomicInteger(musicSize);
+            AtomicInteger success = new AtomicInteger(0);
             if (musicList != null && musicList.size() > 0) {
                 log.info("等待线程下载合并完成后生成html页面.....");
                 for (int i = 0; i < musicSize; i++) {
@@ -103,7 +104,8 @@ public class DownloadM3u8 extends CommonBean {
                     pool.submit(() -> {
                         int current = count.getAndDecrement();
                         log.info("共{}条链接，剩余{}条待处理", musicSize, current);
-                        new DownloadM3u8().downloadM3u8(finalStr);
+                        String downloadM3u8 = new DownloadM3u8().downloadM3u8(finalStr);
+                        if (downloadM3u8!=null) success.incrementAndGet();
                     });
                 }
             } else {
@@ -111,7 +113,8 @@ public class DownloadM3u8 extends CommonBean {
             }
             pool.shutdown();
             while (!pool.isTerminated()) ;
-            log.info("下载合并结束!");
+            log.info("处理结束！处理链接[{}]条,处理成功[{}]条!",musicList.size(),success.get());
+
 
         } catch (Exception e) {
             e.printStackTrace();
@@ -165,15 +168,15 @@ public class DownloadM3u8 extends CommonBean {
             //下载m3u8
             File m3u8 = new File(downloadFile);
             if (!dLocalListFirst||!m3u8.exists()||m3u8.length()<=0)
-                if(!downloadFile(url, downloadFile)){
-                    //如果有失败，尝试重新下载
-                    boolean retryDownload = retryDownload();
-                    log.debug("m3u8 retryDownload = {}",retryDownload);
-                    //下载m3u8失败，退出不合并文件
-                    if (!retryDownload) {
-                        return null;
-                    }
-                }
+                downloadFile(url, downloadFile);
+
+            //如果有失败，尝试重新下载
+            boolean retryDownloadm3u8 = retryDownload();
+            log.debug("m3u8 retryDownload = {}",retryDownloadm3u8);
+            //下载m3u8失败，退出不合并文件
+            if (!retryDownloadm3u8) {
+                return null;
+            }
 
             //下载存储ts文件
             List<String> filetxtList = new ArrayList<>();
@@ -188,20 +191,18 @@ public class DownloadM3u8 extends CommonBean {
                 File file = new File(tempfilepath);
                 if (!file.exists() || file.length() <= 0){
                     //下载
-                    if(!downloadFile(tmpurl, tempfilepath)){
-                        //如果有失败，尝试重新下载
-                        boolean retryDownload = retryDownload();
-                        log.debug("ts retryDownload = {}",retryDownload);
-                        //下载ts失败，不合并文件
-                        if (!retryDownload)
-                            return null;
-                    }
-
+                    downloadFile(tmpurl, tempfilepath);
                 }
                 filetxtList.add(tempfilepath);
             }
             br.close();
 
+            //如果有失败，尝试重新下载
+            boolean retryDownloadts = retryDownload();
+            log.debug("ts retryDownload = {}",retryDownloadts);
+            //下载ts失败，不合并文件
+            if (!retryDownloadts)
+                return null;
 
 
 
@@ -292,7 +293,7 @@ public class DownloadM3u8 extends CommonBean {
         //尝试重新下载失败的请求
         while (!errorDownloadUrl.isEmpty()) {
             Iterator<Map.Entry<String, Integer>> iterator = errorDownloadUrl.entrySet().iterator();
-            while (iterator.hasNext()){
+            if (iterator.hasNext()){
                 Map.Entry<String, Integer> next = iterator.next();
                 String[] tmp = next.getKey().split("##");
                 String tmpurl = tmp[0];
@@ -303,12 +304,12 @@ public class DownloadM3u8 extends CommonBean {
                     if(downloadFile(tmpurl,tempfilepath)){
                         //下载成功，移除列表
                         iterator.remove();
-                        return true;
+                        return retryDownload();
                     }
                 } else {
                     //超过5次直接丢弃
+                    log.error("超过{}次尝试，直接丢弃:{}条。{}", value, errorDownloadUrl.size(),tmpurl);
                     iterator.remove();
-                    log.error("超过{}次尝试，直接丢弃:{}", value, tmpurl);
                     return false;
                 }
             }
