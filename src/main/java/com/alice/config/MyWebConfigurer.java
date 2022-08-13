@@ -13,13 +13,13 @@ public class MyWebConfigurer extends CommonBean implements WebMvcConfigurer {
 
     @Override
     public void addResourceHandlers(ResourceHandlerRegistry registry) {
-        if (static_file_path == null || "".equals(static_file_path.trim()))
-            static_file_path = System.getProperty("user.dir");
+        if (staticFilePath == null || "".equals(staticFilePath.trim()))
+            staticFilePath = System.getProperty("user.dir");
 
 //        System.out.println(static_file_path);
         //指定静态资源位置
         registry.addResourceHandler("/**")
-                .addResourceLocations("file:" + static_file_path + File.separator + "Music" + File.separator);
+                .addResourceLocations("file:" + staticFilePath + File.separator + "Music" + File.separator);
     }
 
     @Override

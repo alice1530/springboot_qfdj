@@ -43,9 +43,9 @@ public class CollectionUrl extends CommonBean {
                 musicUrlAndName.add(result);
             }
 
-            int retryTimes=5;
-            if(!StringUtils.isEmpty(retry_times))
-                retryTimes =Integer.valueOf(retry_times);
+            int cRetryTimes=10;
+            if(!StringUtils.isEmpty(retryTimes))
+                cRetryTimes =Integer.valueOf(retryTimes);
             //尝试处理队列其他失败的链接
             while (!errorIds.isEmpty()) {
                 Iterator<Map.Entry<String, Integer>> iterator = errorIds.entrySet().iterator();
@@ -53,7 +53,7 @@ public class CollectionUrl extends CommonBean {
                     Map.Entry<String, Integer> next = iterator.next();
                     String key = next.getKey();
                     Integer value = next.getValue();
-                    if (value <= retryTimes) {
+                    if (value <= cRetryTimes) {
                         log.error("第{}次尝试获取id={}的链接",value, key);
                         String andName = getUrlAndName(key);
                         if (andName == null) continue;
@@ -62,7 +62,7 @@ public class CollectionUrl extends CommonBean {
                         musicUrlAndName.add(andName);
                         log.debug("id:{}===>{}",key,andName);
                     } else {
-                        //超过5次直接丢弃
+                        //超过10次直接丢弃
                         iterator.remove();
                         log.error("超过{}次尝试，直接丢弃id={}的链接请求", value, key);
                     }
@@ -175,8 +175,8 @@ public class CollectionUrl extends CommonBean {
             }
         } catch (Exception e) {
             int retryTimes=5;
-            if(!StringUtils.isEmpty(retry_times))
-                retryTimes =Integer.valueOf(retry_times);
+            if(!StringUtils.isEmpty(retryTimes))
+                retryTimes =Integer.valueOf(retryTimes);
             if(count.getAndIncrement()<=retryTimes) {
                 log.error("尝试第{}次请求",count.get());
                 return getMusicId();

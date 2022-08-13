@@ -22,26 +22,36 @@ public class DownloadM3u8 extends CommonBean {
     private static final String PATH_SEPARATOR = File.separator;
     private static final String RUNTIME_DIR = System.getProperty("user.dir");
     private Map<String, Integer> errorDownloadUrl = new ConcurrentHashMap<>();
-    private static boolean localListFirst;
+    private static boolean dLocalListFirst;
+    private static Integer dConnectTimedOut = 10;
+    private static Integer dRetryTimes=10;
+    private static List<String> musicList = null;
 
     public void handle() {
         try {
             //获取当前时间
             String DATE = new SimpleDateFormat("yyyy-MM-dd").format(System.currentTimeMillis());
-            String userDir = static_file_path;
+            String userDir = staticFilePath;
             if (userDir == null || "".equals(userDir.trim()))
                 userDir = RUNTIME_DIR;
 
+            if(!StringUtils.isEmpty(connectTimedOut)){
+                dConnectTimedOut = Integer.parseInt(connectTimedOut);
+            }
+
+            if(!StringUtils.isEmpty(retryTimes))
+                dRetryTimes =Integer.valueOf(retryTimes);
 
             log.info("当前文件存放路径：{}", userDir);
-            List<String> musicList = new ArrayList<>();
+//            List<String> musicList = new ArrayList<>();
             String dayPath = userDir + PATH_SEPARATOR + "Music" + PATH_SEPARATOR + DATE;
             String dayPathList = userDir + PATH_SEPARATOR + "Music" + PATH_SEPARATOR + DATE + PATH_SEPARATOR + DATE + ".list";
             File daylist = new File(dayPathList);
 
-            localListFirst = local_list_first;
-            log.info("是否优先从本地列表文件获取下载链接：{}", localListFirst);
-            if (localListFirst&&daylist.exists() && daylist.length() > 0) {
+            dLocalListFirst = localListFirst;
+            musicList=new ArrayList<>();
+            log.info("是否优先从本地列表文件获取下载链接：{}", dLocalListFirst);
+            if (dLocalListFirst&&daylist.exists() && daylist.length() > 0) {
                 log.info("已存在当日列表文件：{}", dayPathList);
                 //从本地获取列表文件
                 try {
@@ -76,8 +86,8 @@ public class DownloadM3u8 extends CommonBean {
 //            if(true)return;
 
             Integer threadNumber = 5;
-            if (!StringUtils.isEmpty(download_threads_number)) {
-                int num = Integer.parseInt(download_threads_number);
+            if (!StringUtils.isEmpty(downloadThreadsNumber)) {
+                int num = Integer.parseInt(downloadThreadsNumber);
                 threadNumber = num>0&&num<20? num:20;
             }
 
@@ -86,6 +96,7 @@ public class DownloadM3u8 extends CommonBean {
             log.info("开启{}个线程进行处理....",threadNumber);
             int musicSize = musicList.size();
             AtomicInteger count = new AtomicInteger(musicSize);
+            AtomicInteger success = new AtomicInteger(0);
             if (musicList != null && musicList.size() > 0) {
                 log.info("等待线程下载合并完成后生成html页面.....");
                 for (int i = 0; i < musicSize; i++) {
@@ -95,15 +106,27 @@ public class DownloadM3u8 extends CommonBean {
                     pool.submit(() -> {
                         int current = count.getAndDecrement();
                         log.info("共{}条链接，剩余{}条待处理", musicSize, current);
-                        new DownloadM3u8().downloadM3u8(finalStr);
+                        String downloadM3u8 = new DownloadM3u8().downloadM3u8(finalStr);
+                        if (downloadM3u8!=null) success.incrementAndGet();
                     });
                 }
+
+                pool.shutdown();
+                while (!pool.isTerminated()) ;
+                StringBuffer doneList = new StringBuffer();
+                for (int i = 0; i < musicList.size(); i++) {
+                    doneList.append(musicList.get(i));
+                    doneList.append(System.lineSeparator());
+                }
+                OutputStreamWriter writer = new OutputStreamWriter(new FileOutputStream(dayPathList), "utf-8");
+                writer.write(doneList.toString());
+                writer.flush();
+                writer.close();
             } else {
                 log.error("当前无音乐列表,请往查看当日是否已更新  https://www.vvvdj.com/sort/c1/ ");
             }
-            pool.shutdown();
-            while (!pool.isTerminated()) ;
-            log.info("下载合并结束!");
+            log.info("处理结束！处理链接[{}]条,处理成功[{}]条!",musicList.size(),success.get());
+
 
         } catch (Exception e) {
             e.printStackTrace();
@@ -120,7 +143,7 @@ public class DownloadM3u8 extends CommonBean {
         try {
             //url = "https://tspc.vvvdj.com/c1/2021/12/224514-b9caed/224514.m3u8?upt=a88e0ee91643471999&news";
             if (finalUrl == null) return null;
-            String userDir = static_file_path;
+            String userDir = staticFilePath;
             if (userDir == null || "".equals(userDir.trim()))
                 userDir = RUNTIME_DIR;
             String baseDir = userDir;
@@ -140,7 +163,9 @@ public class DownloadM3u8 extends CommonBean {
             String outfile = outfileDir + PATH_SEPARATOR + id + "_" + musicName + ".aac";
             String downloadUrl = PATH_SEPARATOR + currentDir + PATH_SEPARATOR + id + "_" + musicName + ".aac";
 
-            if (localListFirst&&new File(outfile).exists()) {
+            //判断文件是否存在
+            File outf = new File(outfile);
+            if (dLocalListFirst&&outf.exists()&&outf.length()>0) {
                 log.debug(outfile + "   exists!");
                 return downloadUrl;
             }
@@ -154,11 +179,16 @@ public class DownloadM3u8 extends CommonBean {
 
             //下载m3u8
             File m3u8 = new File(downloadFile);
-            if (!localListFirst||!m3u8.exists())
+            if (!dLocalListFirst||!m3u8.exists()||m3u8.length()<=0)
                 downloadFile(url, downloadFile);
 
             //如果有失败，尝试重新下载
-            retryDownload();
+            boolean retryDownloadm3u8 = retryDownload();
+            log.debug("m3u8 retryDownload = {}",retryDownloadm3u8);
+            //下载m3u8失败，退出不合并文件
+            if (!retryDownloadm3u8) {
+                return null;
+            }
 
             //下载存储ts文件
             List<String> filetxtList = new ArrayList<>();
@@ -171,15 +201,21 @@ public class DownloadM3u8 extends CommonBean {
                 String tempfilepath = downloadDir + PATH_SEPARATOR + filename;
                 //log.debug("tmpurl = "+filename+":"+ new File(tempfilepath).length());
                 File file = new File(tempfilepath);
-                if (!file.exists() || file.length() <= 0)
+                if (!file.exists() || file.length() <= 0){
+                    //下载
                     downloadFile(tmpurl, tempfilepath);
+                }
                 filetxtList.add(tempfilepath);
             }
             br.close();
 
-
             //如果有失败，尝试重新下载
-            retryDownload();
+            boolean retryDownloadts = retryDownload();
+            log.debug("ts retryDownload = {}",retryDownloadts);
+            //下载ts失败，不合并文件
+            if (!retryDownloadts)
+                return null;
+
 
 
             //保存ts列表id.txt文件名
@@ -197,6 +233,10 @@ public class DownloadM3u8 extends CommonBean {
             }
 
 
+            //处理完成的，拒绝合成
+            //if (finalUrl.endsWith("##")&&dLocalListFirst){
+            //    return "done";
+            //}
             //ts合成
 
             boolean isWin = System.getProperties().getProperty("os.name").toLowerCase().contains("win");
@@ -236,6 +276,16 @@ public class DownloadM3u8 extends CommonBean {
             log.debug("执行合成完成");
             if (new File(outfile).exists()) {
                 log.debug(outfile + " 保存成功！");
+                //处理列表，添加已完成标记
+                if (!finalUrl.endsWith("##")){
+                    for (int i = 0; i < musicList.size(); i++) {
+                        if(finalUrl.equals(musicList.get(i))){
+                            musicList.set(i,finalUrl+"##");
+                        }
+                    }
+//                    if(new File(outfile).delete())
+//                        log.debug("delete {} ok!",outfile);
+                }
                 return downloadUrl;
 
 			/*
@@ -265,32 +315,32 @@ public class DownloadM3u8 extends CommonBean {
 
     }
 
-    private void retryDownload() {
-        int retryTimes=5;
-        if(!StringUtils.isEmpty(retry_times))
-            retryTimes =Integer.valueOf(retry_times);
+    private boolean retryDownload() {
         //尝试重新下载失败的请求
         while (!errorDownloadUrl.isEmpty()) {
             Iterator<Map.Entry<String, Integer>> iterator = errorDownloadUrl.entrySet().iterator();
-            while (iterator.hasNext()){
+            if (iterator.hasNext()){
                 Map.Entry<String, Integer> next = iterator.next();
                 String[] tmp = next.getKey().split("##");
                 String tmpurl = tmp[0];
                 String tempfilepath = tmp[1];
                 Integer value = next.getValue();
-                if (value <= retryTimes) {
+                if (value <= dRetryTimes) {
                     log.error("第{}次尝试下载:{}", value, tmpurl);
                     if(downloadFile(tmpurl,tempfilepath)){
                         //下载成功，移除列表
                         iterator.remove();
+                        return retryDownload();
                     }
                 } else {
-                    //超过5次直接丢弃
-                    iterator.remove();
-                    log.error("超过{}次尝试，直接丢弃:{}", value, tmpurl);
+                    //超过5次直接丢弃,清空错误队列
+                    log.error("超过{}次尝试，直接丢弃:{}条。{}", value, errorDownloadUrl.size(),tmpurl);
+                    errorDownloadUrl.clear();
+                    return false;
                 }
             }
         }
+        return true;
     }
 
     private void simpleMrege(String outfile, List<String> filetxtList) throws IOException {
@@ -319,8 +369,8 @@ public class DownloadM3u8 extends CommonBean {
             os = new FileOutputStream(downloadFile);
 //            is = u.openStream();
             URLConnection connection = u.openConnection();
-            connection.setConnectTimeout(3*1000);
-            connection.setReadTimeout(2*1000);
+            connection.setConnectTimeout(dConnectTimedOut*1000);
+            connection.setReadTimeout(dConnectTimedOut*1000);
             is = connection.getInputStream();
 
             int len = 0;
@@ -361,33 +411,49 @@ public class DownloadM3u8 extends CommonBean {
 
 
     public void deleteNdays() {
-        String userDir = static_file_path;
+        String userDir = staticFilePath;
         if (userDir == null || "".equals(userDir.trim())) {
             userDir = RUNTIME_DIR;
         }
-        if (deleteNdays == null || "".equals(deleteNdays.trim())) {
-            deleteNdays = "7";
+
+        String dDeleteNDays = deleteNDays;
+        if (dDeleteNDays == null || "".equals(dDeleteNDays.trim())) {
+            dDeleteNDays = "7";
         }
-        log.info("尝试删除 {} 天前的文件 !", deleteNdays);
+        log.info("尝试删除 {} 天前的文件 !", dDeleteNDays);
 
         Calendar instance = Calendar.getInstance();
-        instance.add(Calendar.DATE, -Integer.parseInt(deleteNdays));
+        instance.add(Calendar.DATE,-1);
+
+        Date yesterday =instance.getTime();
+        instance.add(Calendar.DATE, -Integer.parseInt(dDeleteNDays)+1);
         Date time = instance.getTime();
         SimpleDateFormat format = new SimpleDateFormat("yyyy-MM-dd");
 
 
-        String staticFilePath = userDir + PATH_SEPARATOR + "Music";
-        File f = new File(staticFilePath);
-//        System.out.println(staticFilePath);
-
+        String dStaticFilePath = userDir + PATH_SEPARATOR + "Music";
+        File f = new File(dStaticFilePath);
         File[] files = f.listFiles();
         for (File o : files) {
             if (o.isDirectory() && o.getName().startsWith("20")) {
                 String name = o.getName();
                 try {
+                    //删除n天前的文件
                     Date fdate = format.parse(name);
                     if (fdate.before(time)) {
                         delFiles(o.getAbsolutePath());
+                    }
+
+                    //删除前一天的aac文件
+                    if (fdate.before(yesterday)) {
+                        File[] acc = o.getAbsoluteFile().listFiles();
+                        for (int i = 0; i < acc.length; i++) {
+                            if (acc[i].getName().endsWith(".aac")){
+                                log.info("删除文件：{},{}", acc[i].getAbsolutePath(),acc[i].delete());
+                                //log.error(acc[i].toString());
+                                //delFiles(acc[i].getAbsolutePath());
+                            }
+                        }
                     }
 
                 } catch (ParseException e) {
@@ -397,7 +463,7 @@ public class DownloadM3u8 extends CommonBean {
             }
         }
         //删除搜索目录
-        String searchdownload = staticFilePath + PATH_SEPARATOR + "searchdownload";
+        String searchdownload = dStaticFilePath + PATH_SEPARATOR + "searchdownload";
         delFiles(searchdownload);
         log.info("删除结束！");
     }
@@ -416,8 +482,8 @@ public class DownloadM3u8 extends CommonBean {
     }
 
 
-    public String findFileById(String id) {
-        String userDir = static_file_path;
+    public String findFileById(String id) throws Exception {
+        String userDir = staticFilePath;
         if (userDir == null || "".equals(userDir.trim()))
             userDir = RUNTIME_DIR;
         File ff = new File(userDir + PATH_SEPARATOR + "Music");
@@ -427,10 +493,30 @@ public class DownloadM3u8 extends CommonBean {
             if (files[i].exists() && files[i].isDirectory() && files[i].getName().startsWith("20")) {
                 File f = files[i].getAbsoluteFile();
                 String[] list = f.list();
+                String dateDir = files[i].getName();
+                String sList=null;
+                //找现成的文件
                 for (int j = 0; j < list.length; j++) {
                     if (list[j].startsWith(id) && list[j].endsWith("aac"))
                         return PATH_SEPARATOR + f.getName() + PATH_SEPARATOR + list[j];
+                    if (list[j].endsWith(".list"))
+                        sList = list[j];
                 }
+                //找列表，合成
+                if (sList!=null){
+                    BufferedReader br = new BufferedReader(new FileReader(new File(f.getAbsolutePath()+PATH_SEPARATOR+sList)));
+                    String len = null;
+                    while ((len = br.readLine()) != null) {
+                        String tmp = len.split("##")[0];
+                        String sid = tmp.substring(tmp.lastIndexOf("/")+1, tmp.lastIndexOf(".m3u8"));
+                        if (id.equals(sid)){
+                            return downloadM3u8(dateDir,len);
+                        }
+                    }
+                    br.close();
+                }
+
+
             }
 
         }
