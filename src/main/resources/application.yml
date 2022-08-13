@@ -17,9 +17,9 @@ qfdj:
   #  static_file_path: D:\Desktop\Desktop\stat
   static_file_path:
   #  定时任务cron表达式，每日13点16点运行，尽量修改，不要默认扎堆，官网报废就没得玩了
-  task_cron: "0 0 13,16 * * ?"
+  task_cron: 0 30 10-18 * * ?
   #  删除近N天前的文件，留空不填默认删除近7天前文件
-  delete_n_days: 7
+  delete_n_days: 10
   #  下载请求失败重试次数,默认重试10次
   retry_times: 10
   #  下线处理线程个数，默认5个线程处理，超过20个线程按20个处理

@@ -31,6 +31,9 @@ public class MyScheduleTask extends CommonBean {
             log.info("-----------------------");
             downloadM3u8.handle();
             log.info("-----------------------");
+            //生成Html页面
+            createHtml.createHtml();
+            log.info("-----------------------");
             //删除前几天的文件
             downloadM3u8.deleteNdays();
             log.info("-----------------------");
