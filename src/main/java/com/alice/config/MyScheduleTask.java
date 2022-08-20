@@ -29,15 +29,16 @@ public class MyScheduleTask extends CommonBean {
             log.info("列表本地优先=[{}]", localListFirst);
             log.info("自定义的文本=[{}]", freedomText);
             log.info("-----------------------");
-            downloadM3u8.handle();
-            log.info("-----------------------");
-            //生成Html页面
+            //提前生成Html页面,避免404
             createHtml.createHtml();
+            log.info("-----------------------");
+            // 下载和处理
+            downloadM3u8.handle();
             log.info("-----------------------");
             //删除前几天的文件
             downloadM3u8.deleteNdays();
             log.info("-----------------------");
-            //生成Html页面
+            //覆盖生成Html页面
             createHtml.createHtml();
             long end = System.currentTimeMillis();
             log.info("[{}]定时任务结束!耗时:{}ms", f.format(end), end - begin);

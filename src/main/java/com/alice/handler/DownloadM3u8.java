@@ -223,16 +223,17 @@ public class DownloadM3u8 extends CommonBean {
             //保存ts列表id.txt文件名
             String filetxt = downloadDir + PATH_SEPARATOR + id + ".txt";
             File ftxt = new File(filetxt);
-            if (!ftxt.exists() || ftxt.length() <= 0) {
-                BufferedWriter bw = new BufferedWriter(new OutputStreamWriter(new FileOutputStream(ftxt), "utf-8"));
-                int size = filetxtList.size();
-                for (int i = 0; i < size; i++) {
-                    bw.write("file '" + filetxtList.get(i) + "'");
-                    bw.newLine();
-                }
-                bw.close();
-                log.debug(filetxt + " 保存成功！");
+            // 直接覆盖更新路径文件
+            //if (!ftxt.exists() || ftxt.length() <= 0) {
+            BufferedWriter bw = new BufferedWriter(new OutputStreamWriter(new FileOutputStream(ftxt), "utf-8"));
+            int size = filetxtList.size();
+            for (int i = 0; i < size; i++) {
+                bw.write("file '" + filetxtList.get(i) + "'");
+                bw.newLine();
             }
+            bw.close();
+            log.debug(filetxt + " 保存成功！");
+            //}
 
 
             //处理完成的，拒绝合成
