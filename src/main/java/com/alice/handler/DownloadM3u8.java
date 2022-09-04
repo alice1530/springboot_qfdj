@@ -14,6 +14,8 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 @Component
 public class DownloadM3u8 extends CommonBean {
@@ -427,49 +429,37 @@ public class DownloadM3u8 extends CommonBean {
 
         Calendar instance = Calendar.getInstance();
         instance.add(Calendar.DATE,-1);
-
         Date yesterday =instance.getTime();
-        instance.add(Calendar.DATE, -Integer.parseInt(dDeleteNDays)+1);
-        Date time = instance.getTime();
         SimpleDateFormat format = new SimpleDateFormat("yyyy-MM-dd");
 
 
         String dStaticFilePath = userDir + PATH_SEPARATOR + "Music";
         File f = new File(dStaticFilePath);
         File[] files = f.listFiles();
-        int dircount = 0;
+        // 过滤排序顺序
+        List<File> list = Stream.of(files).filter(item -> item.isDirectory() && item.getName().startsWith("20")).sorted().collect(Collectors.toList());
+
         //删除aac文件
-        for (File o : files) {
-            if (o.isDirectory() && o.getName().startsWith("20")) {
-                dircount++;
-                String name = o.getName();
-                Date fdate = format.parse(name);
-                //删除前一天的aac文件
-                if (fdate.before(yesterday)) {
-                    File[] acc = o.getAbsoluteFile().listFiles();
-                    for (int i = 0; i < acc.length; i++) {
-                        if (acc[i].getName().endsWith(".aac")){
-                            log.info("删除文件：{},{}", acc[i].getAbsolutePath(),acc[i].delete());
-                            //log.error(acc[i].toString());
-                            //delFiles(acc[i].getAbsolutePath());
-                        }
+        for (int i = 0; i < list.size(); i++) {
+            String name = list.get(i).getName();
+            Date fdate = format.parse(name);
+            //删除前一天的aac文件
+            if (fdate.before(yesterday)) {
+                File[] acc = list.get(i).getAbsoluteFile().listFiles();
+                for (int j = 0; j < acc.length; j++) {
+                    if (acc[j].getName().endsWith(".aac")) {
+                        log.info("删除文件：{},{}", acc[j].getAbsolutePath(), acc[j].delete());
                     }
                 }
             }
         }
+
+
         //删除文件夹，文件夹数量超过保留天数才删除
-        if (dircount>Integer.parseInt(dDeleteNDays)){
-            for (File o : files) {
-                if (o.isDirectory() && o.getName().startsWith("20")) {
-                    String name = o.getName();
-                        //删除n天前的文件
-                        Date fdate = format.parse(name);
-                        if (fdate.before(time)) {
-                            delFiles(o.getAbsolutePath());
-                        }
-                }
-            }
+        while (list.size() > Integer.parseInt(dDeleteNDays)) {
+                 delFiles(list.remove(0).getAbsolutePath());
         }
+
         //删除搜索目录
         String searchdownload = dStaticFilePath + PATH_SEPARATOR + "searchdownload";
         delFiles(searchdownload);
